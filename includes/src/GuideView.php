@@ -77,7 +77,7 @@ final class GuideView {
 	?>
 	<section class="cg-closing cg-wrap">
 		<div><span class="cg-eyebrow">یک انتخاب خوب، از نیاز خودت شروع می‌شود.</span><h2>همراهت باشد. به‌اندازه نیازت.</h2></div>
-		<button class="cg-primary" data-cg-restart>انتخابم را پیدا کنم</button>
+		<button class="cg-button cg-button--primary" data-cg-restart>انتخابم را پیدا کنم</button>
 	</section>
 </div>
 <script type="application/json" id="ts-charge-config"><?php echo $json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON-hex encoded. ?></script>
@@ -100,13 +100,14 @@ final class GuideView {
 			<h1>شارژ همراهت.<br><span>خیالت راحت‌تر.</span></h1>
 			<p class="cg-lead">برای انتخاب خوب، لازم نیست از وات و آمپر سر دربیاری. از چیزی که نیاز داری شروع کنیم.</p>
 			<div class="cg-actions">
-				<button class="cg-primary" id="cg-start" data-cg-restart>کمکم کن انتخاب کنم<span aria-hidden="true">＋</span></button>
+				<button class="cg-button cg-button--primary" id="cg-start" data-cg-restart>کمکم کن انتخاب کنم<span aria-hidden="true">＋</span></button>
 				<a class="cg-text-button" href="#cg-help">درست شارژ نمی‌کنه</a>
 			</div>
 			<div class="cg-hero-note"><?php echo $this->icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> چند انتخاب ساده · بدون ثبت‌نام · بدون عجله</div>
 		</div>
 		<div class="cg-hero-visual">
 			<img src="<?php echo esc_url( $this->image_url( $hero['file'] ) ); ?>" alt="<?php echo esc_attr( $hero['alt'] ); ?>" width="<?php echo (int) $hero['width']; ?>" height="<?php echo (int) $hero['height']; ?>" fetchpriority="high" decoding="async">
+			<div class="cg-floating-label"><span class="cg-mini-icon" aria-hidden="true">ϟ</span><div>همراه روزهای شلوغ<small>یک انتخاب، متناسب با نیاز تو</small></div></div>
 			<span class="cg-image-caption">تصویر فضاسازی</span>
 		</div>
 	</section>

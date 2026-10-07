@@ -40,6 +40,20 @@ $config  = [
 ];
 $markup = ( new TSChargeGuide\GuideView( $config, $catalog ) )->render();
 
+// The preview is a file:// page, so the URLs the shims hand out are rewritten
+// to paths that resolve on disk — otherwise every image would 404 and the
+// layout would be measured without its pictures.
+$markup = str_replace(
+	'https://store.example/wp-content/plugins/ts-charge-guide/',
+	'../../../',
+	$markup
+);
+$markup = preg_replace_callback(
+	'#https://store\.example/img/(\d+)\.webp#',
+	static fn( array $m ): string => '../../../assets/images/' . ( 0 === (int) $m[1] % 2 ? 'life-mobile.webp' : 'life-home.webp' ),
+	$markup
+);
+
 if ( ! is_dir( $out_dir ) ) {
 	mkdir( $out_dir, 0777, true );
 }

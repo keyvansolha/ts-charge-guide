@@ -28,10 +28,12 @@
 	--cg-border-subtle: var(--border-subtle, #dce3e8);
 	--cg-border-control: var(--border-control, #c8d3db);
 	--cg-content-link-color: var(--content-link-color, #315a7d);
+	--cg-content-heading-color: var(--content-heading-color, #002864);
 	--cg-focus-ring: var(--focus-ring, #6f8900);
 	--cg-state-success: var(--state-success, #21762a);
 	--cg-state-warning: var(--state-warning, #a85f00);
 	--cg-state-warning-surface: var(--state-warning-surface, #fff5e7);
+	--cg-state-info: var(--state-info, #176a9b);
 	--cg-shadow-soft: var(--shadow-soft, 0 14px 42px rgb(16 42 67 / 0.12));
 	--cg-theme-motion-duration: var(--theme-motion-duration, 320ms);
 	--cg-theme-motion-ease: var(--theme-motion-ease, cubic-bezier(0.2, 0.7, 0.3, 1));
@@ -56,9 +58,11 @@ body.dark .ts-charge {
 	--cg-border-subtle: var(--border-subtle, #29404f);
 	--cg-border-control: var(--border-control, #365265);
 	--cg-content-link-color: var(--content-link-color, #9dcce8);
+	--cg-content-heading-color: var(--content-heading-color, #edf4f7);
 	--cg-focus-ring: var(--focus-ring, #b6e30c);
 	--cg-state-success: var(--state-success, #8dd697);
 	--cg-state-warning: var(--state-warning, #f2bd68);
 	--cg-state-warning-surface: var(--state-warning-surface, #3a2a16);
+	--cg-state-info: var(--state-info, #8ac9ee);
 	--cg-shadow-soft: var(--shadow-soft, 0 14px 42px rgb(0 0 0 / 0.32));
 }

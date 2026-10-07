@@ -84,6 +84,17 @@ const initWizard = ( root, config ) => {
 		rail( step );
 	};
 
+	/**
+	 * Replay the entrance animation of a panel that was just rebuilt.
+	 *
+	 * @param {HTMLElement} node Revealed panel.
+	 */
+	const reveal = ( node ) => {
+		node.classList.remove( 'cg-enter' );
+		void node.offsetWidth;
+		node.classList.add( 'cg-enter' );
+	};
+
 	const goToStep = ( step ) => {
 		if ( 2 === step ) {
 			const template = root.querySelector( '#' + STEP_TEMPLATE[ 2 ] );
@@ -91,12 +102,14 @@ const initWizard = ( root, config ) => {
 				return;
 			}
 			stage.replaceChildren( template.content.cloneNode( true ) );
+			reveal( stage );
 		} else if ( 3 === step ) {
 			const template = root.querySelector( '#' + STEP_TEMPLATE[ 3 ] + state.need );
 			if ( ! template ) {
 				return;
 			}
 			stage.replaceChildren( template.content.cloneNode( true ) );
+			reveal( stage );
 		}
 		show( step );
 		const heading = ( 2 === step || 3 === step ? stage : step1 ).querySelector( 'h3' );
@@ -142,9 +155,10 @@ const initWizard = ( root, config ) => {
 		}
 
 		const actions = el( 'div', { className: 'cg-wizard-actions' } );
-		const back = el( 'button', { className: 'cg-back', type: 'button', 'data-cg-back': '3' }, 'تغییر اولویت' );
-		actions.appendChild( back );
+		actions.appendChild( el( 'button', { className: 'cg-back', type: 'button', 'data-cg-back': '3' }, 'تغییر اولویت' ) );
+		actions.appendChild( el( 'button', { className: 'cg-button cg-button--secondary', type: 'button', 'data-cg-reset': '1' }, 'از اول انتخاب کنم' ) );
 		result.appendChild( actions );
+		reveal( result );
 		show( 4 );
 		const heading = result.querySelector( 'h3' );
 		if ( heading ) {
@@ -174,7 +188,7 @@ const initWizard = ( root, config ) => {
 		if ( ! button ) {
 			return;
 		}
-		if ( button.hasAttribute( 'data-cg-restart' ) ) {
+		if ( button.hasAttribute( 'data-cg-restart' ) || button.hasAttribute( 'data-cg-reset' ) ) {
 			state.need = null;
 			state.device = null;
 			state.priority = null;
