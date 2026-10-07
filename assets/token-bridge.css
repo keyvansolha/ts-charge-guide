@@ -22,7 +22,7 @@
 	--cg-surface-navigation: var(--surface-navigation, #002864);
 	--cg-text-strong: var(--text-strong, #102a43);
 	--cg-text-body: var(--text-body, #334e68);
-	--cg-text-muted: var(--text-muted, #5f7283);
+	--cg-text-muted: var(--text-body, #5f7283);
 	--cg-text-on-brand: var(--text-on-brand, #f7fbff);
 	--cg-text-on-accent: var(--text-on-accent, #09213a);
 	--cg-border-subtle: var(--border-subtle, #dce3e8);
@@ -53,7 +53,7 @@ body.dark .ts-charge {
 	--cg-surface-navigation: var(--surface-navigation, #061f38);
 	--cg-text-strong: var(--text-strong, #edf4f7);
 	--cg-text-body: var(--text-body, #c8d4da);
-	--cg-text-muted: var(--text-muted, #92a4ae);
+	--cg-text-muted: var(--text-body, #92a4ae);
 	--cg-text-on-accent: var(--text-on-accent, #09213a);
 	--cg-border-subtle: var(--border-subtle, #29404f);
 	--cg-border-control: var(--border-control, #365265);

@@ -80,7 +80,7 @@ final class GuideView {
 		echo $this->faq(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 	?>
 	<section class="cg-closing cg-wrap">
-		<div><span class="cg-eyebrow">یک انتخاب خوب، از نیاز خودت شروع می‌شود.</span><h2>همراهت باشد. به‌اندازه نیازت.</h2></div>
+		<div><h2>همراهت باشد. به‌اندازه نیازت.</h2></div>
 		<button class="cg-button cg-button--primary" data-cg-restart>انتخابم را پیدا کنم</button>
 	</section>
 </div>
@@ -100,14 +100,13 @@ final class GuideView {
 		?>
 	<section class="cg-hero cg-wrap">
 		<div class="cg-hero-copy">
-			<span class="cg-eyebrow">پاوربانک و شارژر، به زبان ساده</span>
 			<h1>شارژ همراهت.<br><span>خیالت راحت‌تر.</span></h1>
-			<p class="cg-lead">برای انتخاب خوب، لازم نیست از وات و آمپر سر دربیاری. از چیزی که نیاز داری شروع کنیم.</p>
+			<p class="cg-lead">لازم نیست وات و آمپر را حفظ باشی؛ فقط بگو چه‌کار می‌کنی، ما انتخاب را ساده می‌کنیم.</p>
 			<div class="cg-actions">
 				<button class="cg-button cg-button--primary" id="cg-start" data-cg-restart>کمکم کن انتخاب کنم<span aria-hidden="true">＋</span></button>
 				<a class="cg-text-button" href="#cg-help">درست شارژ نمی‌کنه</a>
 			</div>
-			<div class="cg-hero-note"><?php echo $this->icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> چند انتخاب ساده · بدون ثبت‌نام · بدون عجله</div>
+			<div class="cg-hero-note"><?php echo $this->icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> چند انتخاب ساده · بدون عجله</div>
 		</div>
 		<div class="cg-hero-visual">
 			<img src="<?php echo esc_url( $this->image_url( $hero['file'] ) ); ?>" alt="<?php echo esc_attr( $hero['alt'] ); ?>" width="<?php echo (int) $hero['width']; ?>" height="<?php echo (int) $hero['height']; ?>" fetchpriority="high" decoding="async">
@@ -131,7 +130,7 @@ final class GuideView {
 		?>
 	<section class="cg-section cg-wrap" id="cg-journey" aria-labelledby="cg-journey-title">
 		<div class="cg-section-top">
-			<div><span class="cg-eyebrow">۰۱ / انتخاب راحت</span><h2 id="cg-journey-title">از اینجا شروع کنیم.</h2></div>
+			<div><h2 id="cg-journey-title">از اینجا شروع کنیم.</h2></div>
 			<p>هر مرحله فقط یک انتخاب.<br>اگر مطمئن نیستی، اشکالی ندارد.</p>
 		</div>
 		<div class="cg-journey">
@@ -205,7 +204,6 @@ final class GuideView {
 	<section class="cg-laptop cg-wrap">
 		<img src="<?php echo esc_url( $this->image_url( $laptop['file'] ) ); ?>" alt="<?php echo esc_attr( $laptop['alt'] ); ?>" width="<?php echo (int) $laptop['width']; ?>" height="<?php echo (int) $laptop['height']; ?>" loading="lazy" decoding="async">
 		<div>
-			<span class="cg-eyebrow">پاوربانک، فراتر از گوشی</span>
 			<h2>برای بعضی لپ‌تاپ‌ها هم همراه خوبی است.</h2>
 			<p>یک پاوربانک با توان کافی می‌تواند برای شارژ برخی لپ‌تاپ‌ها هم استفاده شود؛ یک کاربرد مفید وقتی به پریز دسترسی نداری.</p>
 			<p class="cg-note-inline">قبل از انتخاب: لپ‌تاپ باید از شارژ ورودی USB-C پشتیبانی کند. توان موردنیاز آن و کابل را با مشخصات پاوربانک تطبیق بده؛ داشتن درگاه USB-C به‌تنهایی کافی نیست.</p>
@@ -229,7 +227,7 @@ final class GuideView {
 		?>
 	<section class="cg-section cg-wrap" id="cg-care" aria-labelledby="cg-care-title">
 		<div class="cg-section-top">
-			<div><span class="cg-eyebrow">۰۲ / مراقبت، بدون وسواس</span><h2 id="cg-care-title">هوای باتری‌ات را داشته باش.</h2></div>
+			<div><h2 id="cg-care-title">هوای باتری‌ات را داشته باش.</h2></div>
 			<p>چهار نکته که دانستنشان کمک می‌کند.<br>با پشتوانه راهنمای رسمی سازنده.</p>
 		</div>
 		<div class="cg-facts">
@@ -259,7 +257,6 @@ final class GuideView {
 
 		<div class="cg-care" id="cg-battery">
 			<div>
-				<span class="cg-eyebrow">همین حالا می‌توانی بررسی کنی</span>
 				<h3>تنظیمات مراقبت از باتری کجاست؟</h3>
 				<p>مدل یا نسخه نرم‌افزار گوشی‌ات را انتخاب کن؛ مسیر و گزینه مربوط به آن را ببین.</p>
 				<div class="cg-filters cg-care-filters" role="tablist" aria-label="راهنمای تنظیمات باتری">
@@ -285,7 +282,7 @@ final class GuideView {
 		<?php $reading = $this->reading_query(); ?>
 		<?php if ( $reading ) : ?>
 		<div class="cg-reading-heading">
-			<div><span class="cg-eyebrow">از مجله تهران اسپیکر</span><h3>اگر دوست داری بیشتر بدانی.</h3></div>
+			<div><h3>اگر دوست داری بیشتر بدانی.</h3></div>
 			<p>چند مطلب مرتبط برای ادامه مطالعه</p>
 		</div>
 		<div class="cg-reading">
@@ -319,7 +316,6 @@ final class GuideView {
 		?>
 		<div class="cg-walkthrough">
 			<div class="cg-instructions">
-				<span class="cg-eyebrow">راهنمای <?php echo esc_html( $guide['label'] ); ?></span>
 				<ol class="cg-care-steps">
 					<li><b>تنظیمات گوشی را باز کن.</b><span dir="ltr"><?php echo esc_html( $guide['path'][0] ); ?></span></li>
 					<li><b>وارد بخش باتری شو.</b><span dir="ltr"><?php echo esc_html( $guide['path'][1] ); ?></span></li>
@@ -365,8 +361,8 @@ final class GuideView {
 		?>
 	<section class="cg-section cg-wrap" id="cg-help" aria-labelledby="cg-help-title">
 		<div class="cg-section-top">
-			<div><span class="cg-eyebrow">۰۳ / یک مشکل، چند بررسی ساده</span><h2 id="cg-help-title">گوشی یا پاوربانکت درست شارژ نمی‌شود؟</h2></div>
-			<p>اول علت‌های ساده را بررسی کنیم.<br>شاید نیازی به خرید جدید نباشد.</p>
+			<div><h2 id="cg-help-title">گوشی یا پاوربانکت درست شارژ نمی‌شود؟</h2></div>
+			<p>شاید اصلاً نیازی به خرید جدید نباشد.</p>
 		</div>
 		<div class="cg-help-layout">
 			<div class="cg-symptoms" role="tablist" aria-label="انتخاب مشکل">
@@ -381,7 +377,6 @@ final class GuideView {
 			<div class="cg-help-panels">
 				<?php foreach ( $issues as $key => $issue ) : ?>
 					<div class="cg-help-panel" id="cg-issue-panel-<?php echo esc_attr( $key ); ?>" role="tabpanel" aria-labelledby="cg-issue-tab-<?php echo esc_attr( $key ); ?>" data-cg-issue-panel="<?php echo esc_attr( $key ); ?>" <?php echo $key === $active ? '' : 'hidden'; ?>>
-						<span class="cg-eyebrow">این سه مورد را به‌ترتیب بررسی کن</span>
 						<h3><?php echo esc_html( $issue['title'] ); ?></h3>
 						<p class="cg-help-intro"><?php echo esc_html( $issue['intro'] ); ?></p>
 						<ol class="cg-help-steps">
@@ -414,7 +409,7 @@ final class GuideView {
 		?>
 	<section class="cg-section cg-wrap" id="cg-products" aria-labelledby="cg-products-title">
 		<div class="cg-section-top">
-			<div><span class="cg-eyebrow">۰۴ / از نزدیک ببین</span><h2 id="cg-products-title">آشنایی با چند انتخاب.</h2></div>
+			<div><h2 id="cg-products-title">آشنایی با چند انتخاب.</h2></div>
 			<div class="cg-filters" role="group" aria-label="نوع محصول">
 				<button class="cg-filter is-selected" data-cg-filter="all" aria-pressed="true">همه</button>
 				<button class="cg-filter" data-cg-filter="powerbank" aria-pressed="false">پاوربانک</button>
@@ -567,7 +562,6 @@ final class GuideView {
 		?>
 	<section class="cg-section cg-wrap cg-faq" id="cg-faq" aria-labelledby="cg-faq-title">
 		<div>
-			<span class="cg-eyebrow">جواب‌های کوتاه برای سؤال‌های مهم</span>
 			<h2 id="cg-faq-title">شاید سؤال تو هم باشد.</h2>
 			<p>عددهای بزرگ، همه داستان نیستند.</p>
 			<img src="<?php echo esc_url( $this->image_url( $laptop['file'] ) ); ?>" alt="پاوربانک کنار لپ‌تاپ و گوشی روی میز فضای باز" width="<?php echo (int) $laptop['width']; ?>" height="<?php echo (int) $laptop['height']; ?>" loading="lazy" decoding="async">
