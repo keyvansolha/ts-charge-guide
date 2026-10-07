@@ -137,15 +137,15 @@ final class GuideView {
 			<aside class="cg-rail">
 				<span class="cg-rail-brand">همراه شارژ</span>
 				<div class="cg-rail-steps" aria-label="مراحل راهنما">
-					<span class="cg-rail-step" data-rail="1" aria-current="step">۱ <b>نیازت</b></span>
-					<span class="cg-rail-step" data-rail="2">۲ <b>دستگاهت</b></span>
-					<span class="cg-rail-step" data-rail="3">۳ <b>اولویتت</b></span>
+					<span class="cg-rail-step" data-rail="1" aria-current="step"><span class="cg-rail-num">۱</span> <b>نیازت</b></span>
+					<span class="cg-rail-step" data-rail="2"><span class="cg-rail-num">۲</span> <b>دستگاهت</b></span>
+					<span class="cg-rail-step" data-rail="3"><span class="cg-rail-num">۳</span> <b>اولویتت</b></span>
 				</div>
 				<p>قرار نیست بیشتر خرج کنی؛<br>قرار است درست‌تر انتخاب کنی.</p>
 			</aside>
 			<div class="cg-wizard" id="cg-wizard">
 				<div class="cg-step" data-cg-step="1">
-					<span class="cg-step-label">قدم ۱ از ۳</span>
+					<span class="cg-step-label">قدم <span class="cg-step-num">۱</span> از ۳</span>
 					<h3 tabindex="-1">چه کمکی از دستم برمیاد؟</h3>
 					<div class="cg-choices">
 						<?php foreach ( $needs as $key => $need ) : ?>
@@ -159,7 +159,7 @@ final class GuideView {
 					<p class="cg-quiet">انتخابت را هر وقت خواستی می‌توانی عوض کنی.</p>
 				</div>
 				<template id="cg-step2">
-					<span class="cg-step-label">قدم ۲ از ۳</span>
+					<span class="cg-step-label">قدم <span class="cg-step-num">۲</span> از ۳</span>
 					<h3 tabindex="-1">بیشتر برای چه دستگاهی؟</h3>
 					<div class="cg-options">
 						<?php foreach ( Content::devices() as $key => $device ) : ?>
@@ -173,7 +173,7 @@ final class GuideView {
 				</template>
 				<?php foreach ( array_keys( $needs ) as $need_key ) : ?>
 					<template id="cg-step3-<?php echo esc_attr( $need_key ); ?>">
-						<span class="cg-step-label">قدم ۳ از ۳</span>
+						<span class="cg-step-label">قدم <span class="cg-step-num">۳</span> از ۳</span>
 						<h3 tabindex="-1">چه چیزی برات مهم‌تره؟</h3>
 						<div class="cg-options">
 							<?php foreach ( Content::priorities( $need_key ) as $row ) : ?>
