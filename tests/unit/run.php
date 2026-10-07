@@ -103,15 +103,24 @@ update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_t
 $app = plugin();
 $rows = $app->catalog->products();
 $by_id = array_column( $rows, null, 'id' );
-check( 'assigned categories produce cards', 5 === count( $rows ) );
+check( 'assigned categories produce cards', 4 === count( $rows ) );
 check( 'cards are read live from the store', in_array( 'پاوربانک الف', array_column( $rows, 'name' ), true ) );
 check( 'card kind comes from the configured term', 'powerbank' === $by_id[901]['kind'] && 'charger' === $by_id[904]['kind'] );
 check( 'card price is the store price', 900000.0 === $by_id[901]['price'] );
 check( 'card image is the store attachment', str_contains( (string) $by_id[901]['image'], '/img/901.webp' ) );
 check( 'card URL is the store permalink', 'https://store.example/product/901/' === $by_id[901]['url'] );
-check( 'stock is read, not assumed', false === $by_id[902]['inStock'] );
-check( 'a product without an image is still offered', null === $by_id[905]['image'] );
 check( 'brand comes from the store taxonomy when present', null === $by_id[901]['brand'] );
+check( 'a product without an image is still offered', null === $by_id[905]['image'] );
+
+/* In-stock rule: the query asks for it and the adapter enforces it again. */
+$main_queries = array_values( array_filter( $GLOBALS['ts_cg_query_log'], static fn( array $q ): bool => 'instock' === ( $q['stock_status'] ?? null ) ) );
+$count_queries = array_values( array_filter( $GLOBALS['ts_cg_query_log'], static fn( array $q ): bool => [ 'outofstock', 'onbackorder' ] === ( $q['stock_status'] ?? null ) ) );
+check( 'the catalog queries WooCommerce for in-stock products only', 2 === count( $main_queries ) && 'publish' === $main_queries[0]['status'] );
+check( 'the hidden count is asked for without hydrating products', 2 === count( $count_queries ) && 'ids' === $count_queries[0]['return'] && true === $count_queries[0]['paginate'] );
+check( 'an out-of-stock product is never offered', ! isset( $by_id[902] ) && ! in_array( 902, array_column( $rows, 'id' ), true ) );
+check( 'every offered card is in stock', [] === array_filter( $rows, static fn( array $row ): bool => empty( $row['inStock'] ) ) );
+check( 'the withheld count is reported for the live check', 1 === $app->catalog->withheld( 'powerbank' )['stock'] );
+check( 'nothing is withheld for a kind with no out-of-stock products', 0 === $app->catalog->withheld( 'charger' )['stock'] );
 
 $queries = count( $GLOBALS['ts_cg_query_log'] );
 $app->catalog->products();
@@ -150,7 +159,8 @@ $catalog = [
 ];
 
 $result = Recommendation::build( [ 'need' => 'powerbank', 'device' => 'samsung', 'priority' => 'capacity' ], $catalog );
-check( 'picks are the live catalog rows, not fixed ids', [ 902, 903, 901 ] === array_column( $result['products'], 'id' ) );
+check( 'picks are the live catalog rows, not fixed ids', [ 902, 903 ] === array_column( $result['products'], 'id' ) );
+check( 'an out-of-stock row handed in directly is dropped', ! in_array( 901, array_column( $result['products'], 'id' ), true ) );
 check( 'a result never certifies compatibility', false === $result['certifies'] );
 check( 'the result carries the checklist and the warning', 3 === count( $result['checklist'] ) && '' !== $result['warning'] );
 check( 'a public pick carries no internal field', ! array_key_exists( 'price', $result['products'][0] ) );
@@ -160,6 +170,11 @@ check( 'the reuse path offers no product at all', [] === $reuse['products'] );
 
 $both = Recommendation::build( [ 'need' => 'both', 'device' => 'other', 'priority' => 'multi' ], $catalog );
 check( 'the both path shows the cheapest live pick of each kind', [ 902, 904 ] === array_column( $both['products'], 'id' ) );
+
+$out_of_stock = Recommendation::build( [ 'need' => 'charger', 'device' => 'other', 'priority' => 'single' ], [
+	[ 'id' => 950, 'name' => 'شارژر ناموجود', 'kind' => 'charger', 'price' => 100.0, 'inStock' => false, 'url' => '#', 'image' => null, 'priceHtml' => '', 'brand' => null ],
+] );
+check( 'a catalog of nothing available yields no pick at all', [] === $out_of_stock['products'] );
 
 $empty = Recommendation::build( [ 'need' => 'powerbank', 'device' => 'other', 'priority' => 'light' ], [] );
 check( 'an empty catalog still returns usable copy', [] === $empty['products'] && '' !== $empty['heading'] );

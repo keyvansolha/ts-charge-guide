@@ -86,9 +86,13 @@ final class Recommendation {
 	}
 
 	/**
-	 * Pick cards for a result: the configured categories, in stock first, then
-	 * cheapest first. Nothing is claimed about compatibility; the warning
-	 * above the picks says so.
+	 * Pick cards for a result: the configured categories, in stock, cheapest
+	 * first. Nothing is claimed about compatibility; the warning above the
+	 * picks says so.
+	 *
+	 * A row that is not in stock is dropped here as well, so a caller that
+	 * hands over an unfiltered snapshot still cannot publish an unavailable
+	 * card.
 	 *
 	 * @param string                          $need     Need key.
 	 * @param string                          $priority Priority key.
@@ -102,16 +106,13 @@ final class Recommendation {
 			array_filter(
 				$catalog,
 				static fn( array $row ): bool => in_array( (string) ( $row['kind'] ?? '' ), $wanted, true )
+					&& ! empty( $row['inStock'] )
 			)
 		);
 
 		usort(
 			$rows,
 			static function ( array $a, array $b ): int {
-				$stock = (int) (bool) ( $b['inStock'] ?? false ) <=> (int) (bool) ( $a['inStock'] ?? false );
-				if ( 0 !== $stock ) {
-					return $stock;
-				}
 				$price = (float) ( $a['price'] ?? 0.0 ) <=> (float) ( $b['price'] ?? 0.0 );
 				if ( 0 !== $price ) {
 					return $price;

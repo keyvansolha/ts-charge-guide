@@ -77,23 +77,35 @@ function ts_cg_product( int $id, array $props ): void {
 }
 
 /**
- * WooCommerce product query. Honors status, category slugs and limit, and
- * records every query so the tests can prove caching.
+ * Fake wc_get_products(): filters the fake store the way WooCommerce does.
+ *
+ * Honors status, category slugs, stock status and limit, records every query
+ * so the tests can prove caching, and answers `paginate` with the total/paged
+ * shape WooCommerce returns (used for the out-of-stock count).
  *
  * @param array<string, mixed> $args Query args.
- * @return array<int, object>
+ * @return array<int, object>|object
  */
-function wc_get_products( array $args ) {
+function wc_get_products( array $args = [] ) {
 	$GLOBALS['ts_cg_query_log'][] = $args;
 
 	$slugs  = array_map( 'strval', (array) ( $args['category'] ?? [] ) );
 	$status = (array) ( $args['status'] ?? [ 'publish' ] );
 	$limit  = isset( $args['limit'] ) ? (int) $args['limit'] : -1;
+	// WooCommerce reads this as the product's stock status; the fake store
+	// maps it to the in_stock flag the stub reports.
+	$stock  = array_map( 'strval', (array) ( $args['stock_status'] ?? [] ) );
 
 	$out = [];
 	foreach ( $GLOBALS['ts_cg_products'] as $product ) {
 		if ( ! in_array( (string) $product['status'], $status, true ) ) {
 			continue;
+		}
+		if ( $stock ) {
+			$product_stock = ! empty( $product['in_stock'] ) ? 'instock' : 'outofstock';
+			if ( ! in_array( $product_stock, $stock, true ) ) {
+				continue;
+			}
 		}
 		if ( $slugs && ! array_intersect( $slugs, array_map( 'strval', (array) $product['cats'] ) ) ) {
 			continue;
@@ -103,10 +115,20 @@ function wc_get_products( array $args ) {
 
 	usort( $out, static fn( $a, $b ): int => strnatcasecmp( $a->get_name(), $b->get_name() ) );
 
+	$total   = count( $out );
+	$ids_only = 'ids' === ( $args['return'] ?? '' );
 	if ( $limit > 0 ) {
 		$out = array_slice( $out, 0, $limit );
 	}
-	return $out;
+
+	if ( ! empty( $args['paginate'] ) ) {
+		return (object) [
+			'products'      => $ids_only ? array_map( static fn( $p ) => $p->get_id(), $out ) : $out,
+			'total'         => $total,
+			'max_num_pages' => 1,
+		];
+	}
+	return $ids_only ? array_map( static fn( $p ) => $p->get_id(), $out ) : $out;
 }
 
 /** Single product lookup. */

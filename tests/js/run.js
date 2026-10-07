@@ -96,6 +96,8 @@ const click = ( node ) => node.dispatchEvent( new dom.window.MouseEvent( 'click'
 
 check( 'the fixture is the real rendered guide', null !== root && $$( '.cg-card' ).length === 4 );
 check( 'the escaped product name is text, not markup', $$( '.cg-card h3' ).some( ( h ) => h.textContent.includes( '<script>' ) ) && 0 === $$( '.cg-card script' ).length );
+check( 'the out-of-stock product is not rendered at all', ! $$( '.cg-card' ).some( ( c ) => c.textContent.includes( 'ناموجود' ) ) );
+check( 'no card claims an unavailable item is in stock', 0 === $$( '.cg-card' ).filter( ( c ) => c.textContent.includes( 'ناموجود' ) ).length );
 check( 'step 1 is the only visible step at boot', ! $( '[data-cg-step="1"]' ).hidden && $( '#cg-stage' ).hidden && $( '#cg-result' ).hidden );
 
 click( $( '[data-cg-need="powerbank"]' ) );

@@ -413,7 +413,7 @@ final class GuideView {
 				<button class="cg-filter" data-cg-filter="charger" aria-pressed="false">شارژر</button>
 			</div>
 		</div>
-		<p class="cg-catalog-note">این‌ها محصولات همین دسته‌بندی در فروشگاه‌اند؛ مشخصات، قیمت و موجودی نهایی را در صفحه هر محصول ببین. سازگاری شارژ سریع به مدل دستگاه و کابل هم بستگی دارد.</p>
+		<p class="cg-catalog-note">این‌ها محصولات <b>موجودِ</b> همین دسته‌بندی در فروشگاه‌اند؛ مشخصات، قیمت و موجودی نهایی را در صفحه هر محصول ببین. سازگاری شارژ سریع به مدل دستگاه و کابل هم بستگی دارد.</p>
 		<div class="cg-grid" id="cg-grid">
 			<?php foreach ( $this->catalog as $row ) : ?>
 				<?php echo $this->card( $row ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>

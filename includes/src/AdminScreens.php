@@ -118,14 +118,14 @@ final class AdminScreens {
 				<th scope="row"><label for="ts-charge-powerbank">دسته‌بندی پاوربانک</label></th>
 				<td>
 					<?php $this->term_select( 'powerbank_term', (int) $terms['powerbank'] ); ?>
-					<p class="description">فقط محصولات منتشرشدهٔ همین دسته در راهنما نمایش داده می‌شوند.</p>
+					<p class="description">فقط محصولات <strong>منتشرشده و موجود</strong> همین دسته در راهنما نمایش داده می‌شوند.</p>
 				</td>
 			</tr>
 			<tr>
 				<th scope="row"><label for="ts-charge-charger">دسته‌بندی شارژر</label></th>
 				<td>
 					<?php $this->term_select( 'charger_term', (int) $terms['charger'] ); ?>
-					<p class="description">پیشنهاد نتیجهٔ راهنما هم از همین دو دسته انتخاب می‌شود؛ عدد یا محصولی در کد نوشته نشده است.</p>
+					<p class="description">پیشنهاد نتیجهٔ راهنما هم از همین دو دسته انتخاب می‌شود و همیشه موجود است؛ عدد یا محصولی در کد نوشته نشده است.</p>
 				</td>
 			</tr>
 			<tr>
@@ -162,11 +162,24 @@ final class AdminScreens {
 		}
 		?>
 	<h2>محصولاتی که همین حالا نمایش داده می‌شوند</h2>
+	<p class="description">قاعده: فقط محصولاتی که ووکامرس «موجود» می‌داند. ناموجودها پنهان می‌شوند و تعدادشان اینجا گزارش می‌شود.</p>
 		<?php foreach ( [ 'powerbank' => 'پاوربانک', 'charger' => 'شارژر' ] as $kind => $label ) : ?>
-			<?php $rows = $this->catalog->by_kind( $kind ); ?>
-			<h3><?php echo esc_html( $label ); ?> <span class="description">(<?php echo count( $rows ); ?>)</span></h3>
+			<?php
+			$rows     = $this->catalog->by_kind( $kind );
+			$withheld = $this->catalog->withheld( $kind );
+			?>
+			<h3>
+				<?php echo esc_html( $label ); ?>
+				<span class="description">
+					(<?php echo count( $rows ); ?> موجود
+					<?php if ( (int) ( $withheld['stock'] ?? 0 ) > 0 ) : ?>
+						· <?php echo (int) $withheld['stock']; ?> ناموجود پنهان شد
+					<?php endif; ?>
+					)
+				</span>
+			</h3>
 			<?php if ( ! $rows ) : ?>
-				<p class="description">دسته‌ای انتخاب نشده یا محصولی در آن نیست.</p>
+				<p class="description">دسته‌ای انتخاب نشده، یا هیچ محصول موجودی در آن نیست.</p>
 			<?php else : ?>
 				<table class="widefat striped">
 					<thead><tr><th>محصول</th><th>قیمت</th><th>موجودی</th><th>تصویر</th><th>ویرایش</th></tr></thead>

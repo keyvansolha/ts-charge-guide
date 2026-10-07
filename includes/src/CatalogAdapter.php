@@ -13,9 +13,16 @@ defined( 'ABSPATH' ) || exit;
  * Reads the products the owner assigned to the guide from WooCommerce.
  *
  * Nothing about the store is hardcoded: the two category terms come from the
- * settings screen, and every field of a card (name, permalink, image, price,
- * stock) is read live. An unconfigured plugin returns no rows at all, so the
- * product grid simply does not render.
+ * settings screen, and every field of a card (name, permalink, image, price)
+ * is read live. An unconfigured plugin returns no rows at all, so the product
+ * grid simply does not render.
+ *
+ * Only products the store currently has in stock are offered — the query asks
+ * WooCommerce for `stock_status = instock`, and a row is dropped again if the
+ * product reports itself out of stock, so neither a stale index nor a product
+ * that changed while the request ran can put an unavailable card on the page.
+ * What was withheld is reported in the admin live check rather than hidden
+ * silently.
  *
  * Every query is bounded (a per-kind card limit) and cached in a transient
  * keyed by the configuration, with a short negative cache so a failing query
@@ -29,6 +36,12 @@ final class CatalogAdapter {
 	private const NEGATIVE_TTL = 60;
 
 	/**
+	 * Cache payload shape. Bump when the cached structure changes, so a
+	 * transient written by an older revision is never decoded as the new one.
+	 */
+	private const CACHE_FORMAT = 2;
+
+	/**
 	 * Settings service.
 	 *
 	 * @var Settings
@@ -36,11 +49,18 @@ final class CatalogAdapter {
 	private Settings $settings;
 
 	/**
-	 * Request-level cache.
+	 * Request-level row cache, keyed by kind.
 	 *
 	 * @var array<string, array<int, array<string, mixed>>>
 	 */
 	private array $memory = [];
+
+	/**
+	 * Request-level withhold report, keyed by kind.
+	 *
+	 * @var array<string, array<string, int>>
+	 */
+	private array $withheld = [];
 
 	/**
 	 * Constructor.
@@ -87,30 +107,49 @@ final class CatalogAdapter {
 		}
 		$term_id = (int) ( $this->settings->category_terms()[ $kind ] ?? 0 );
 		if ( $term_id < 1 ) {
-			$this->memory[ $kind ] = [];
+			$this->memory[ $kind ]   = [];
+			$this->withheld[ $kind ] = [ 'stock' => 0 ];
 			return [];
 		}
 
-		$limit = $this->settings->cards_per_kind();
-		$key   = TS_CHARGE_GUIDE_CACHE_PREFIX . md5( TS_CHARGE_GUIDE_VERSION . '|' . $kind . '|' . $term_id . '|' . $limit );
+		$limit  = $this->settings->cards_per_kind();
+		$key    = TS_CHARGE_GUIDE_CACHE_PREFIX . md5( self::CACHE_FORMAT . '|' . TS_CHARGE_GUIDE_VERSION . '|' . $kind . '|' . $term_id . '|' . $limit );
 		$cached = get_transient( $key );
-		if ( is_array( $cached ) ) {
-			$this->memory[ $kind ] = $cached;
-			return $cached;
+		if ( is_array( $cached ) && isset( $cached['rows'] ) && is_array( $cached['rows'] ) ) {
+			$this->memory[ $kind ]   = array_values( array_filter( $cached['rows'], 'is_array' ) );
+			$this->withheld[ $kind ] = isset( $cached['withheld'] ) && is_array( $cached['withheld'] )
+				? array_map( 'intval', $cached['withheld'] )
+				: [ 'stock' => 0 ];
+			return $this->memory[ $kind ];
 		}
 
 		try {
-			$rows = $this->query( $kind, $term_id, $limit );
-			$this->remember( $key, $rows, TS_CHARGE_GUIDE_TRANSIENT_EXPIRY );
+			[ $rows, $withheld ] = $this->query( $kind, $term_id, $limit );
+			$this->remember( $key, [ 'rows' => $rows, 'withheld' => $withheld ], TS_CHARGE_GUIDE_TRANSIENT_EXPIRY );
 		} catch ( \Throwable $e ) {
 			// A failing catalog must neither break the page nor be retried on
 			// every render.
-			$rows = [];
-			$this->remember( $key, $rows, self::NEGATIVE_TTL );
+			$rows     = [];
+			$withheld = [ 'stock' => 0 ];
+			$this->remember( $key, [ 'rows' => [], 'withheld' => $withheld ], self::NEGATIVE_TTL );
 		}
 
-		$this->memory[ $kind ] = $rows;
+		$this->memory[ $kind ]   = $rows;
+		$this->withheld[ $kind ] = $withheld;
 		return $rows;
+	}
+
+	/**
+	 * How many products the stock rule withheld for one kind.
+	 *
+	 * @param string $kind 'powerbank' or 'charger'.
+	 * @return array<string, int>
+	 */
+	public function withheld( string $kind ): array {
+		if ( ! isset( $this->withheld[ $kind ] ) ) {
+			$this->by_kind( $kind );
+		}
+		return $this->withheld[ $kind ] ?? [ 'stock' => 0 ];
 	}
 
 	/**
@@ -134,28 +173,39 @@ final class CatalogAdapter {
 	 * @param string $kind    Kind label.
 	 * @param int    $term_id Product-category term ID.
 	 * @param int    $limit   Maximum rows.
-	 * @return array<int, array<string, mixed>>
+	 * @return array{0: array<int, array<string, mixed>>, 1: array<string, int>} Rows and the withhold report.
 	 */
 	private function query( string $kind, int $term_id, int $limit ): array {
+		$withheld = [ 'stock' => 0 ];
 		if ( ! $this->woo_available() ) {
-			return [];
+			return [ [], $withheld ];
 		}
 		$term = get_term( $term_id, 'product_cat' );
 		if ( ! $term || is_wp_error( $term ) || empty( $term->slug ) ) {
-			return [];
+			return [ [], $withheld ];
 		}
 
+		// What the rule hides. Counted separately with an ids-only paged
+		// query, because the main query below never returns these products,
+		// so the loop could not report them; the count is what makes the
+		// admin live check honest instead of silently short.
+		$withheld['stock'] = $this->unavailable_count( (string) $term->slug );
+
 		$args = [
-			'status'   => 'publish',
-			'limit'    => $limit,
-			'category' => [ (string) $term->slug ],
-			'orderby'  => 'title',
-			'order'    => 'ASC',
-			'return'   => 'objects',
+			'status'       => 'publish',
+			'limit'        => $limit,
+			'category'     => [ (string) $term->slug ],
+			'stock_status' => 'instock',
+			'orderby'      => 'title',
+			'order'        => 'ASC',
+			'return'       => 'objects',
 		];
 
 		/**
 		 * Filter the WooCommerce query the guide uses for one category.
+		 *
+		 * Adding `outofstock` here would undo the guide's in-stock rule; the
+		 * withheld count below is what reports the difference.
 		 *
 		 * @param array<string, mixed> $args Query args.
 		 * @param string               $kind 'powerbank' or 'charger'.
@@ -164,7 +214,7 @@ final class CatalogAdapter {
 
 		$products = wc_get_products( is_array( $args ) ? $args : [] );
 		if ( ! is_array( $products ) ) {
-			return [];
+			return [ [], $withheld ];
 		}
 
 		$rows = [];
@@ -172,9 +222,53 @@ final class CatalogAdapter {
 			if ( ! is_object( $product ) ) {
 				continue;
 			}
+			if ( ! $this->in_stock( $product ) ) {
+				// A stale index or a product that sold out mid-request never
+				// reaches the page.
+				$withheld['stock']++;
+				continue;
+			}
 			$rows[] = $this->normalize( $product, $kind );
 		}
-		return $rows;
+		return [ $rows, $withheld ];
+	}
+
+	/**
+	 * How many published products in this term the stock rule hides.
+	 *
+	 * WooCommerce's own `instock` status is what the guide offers, so anything
+	 * marked `outofstock` or `onbackorder` is counted here. The query returns
+	 * ids only and asks for a single row purely to get the total, so no
+	 * product object is hydrated just to be discarded.
+	 *
+	 * @param string $slug Product-category slug.
+	 * @return int
+	 */
+	private function unavailable_count( string $slug ): int {
+		$args = [
+			'status'       => 'publish',
+			'category'     => [ $slug ],
+			'stock_status' => [ 'outofstock', 'onbackorder' ],
+			'limit'        => 1,
+			'return'       => 'ids',
+			'paginate'     => true,
+		];
+
+		$result = wc_get_products( $args );
+		if ( is_object( $result ) && isset( $result->total ) ) {
+			return max( 0, (int) $result->total );
+		}
+		return is_array( $result ) ? count( $result ) : 0;
+	}
+
+	/**
+	 * Whether WooCommerce itself considers this product available.
+	 *
+	 * @param object $product WooCommerce product object.
+	 * @return bool
+	 */
+	private function in_stock( object $product ): bool {
+		return method_exists( $product, 'is_in_stock' ) ? (bool) $product->is_in_stock() : true;
 	}
 
 	/**
@@ -206,7 +300,7 @@ final class CatalogAdapter {
 			'image'     => $image,
 			'price'     => $price,
 			'priceHtml' => $html,
-			'inStock'   => method_exists( $product, 'is_in_stock' ) ? (bool) $product->is_in_stock() : true,
+			'inStock'   => $this->in_stock( $product ),
 			'kind'      => $kind,
 			'brand'     => $this->brand_of( $id ),
 		];
@@ -233,12 +327,12 @@ final class CatalogAdapter {
 	/**
 	 * Store a transient and remember its key for the purge action.
 	 *
-	 * @param string                          $key  Transient key.
-	 * @param array<int, array<string,mixed>> $rows Rows.
-	 * @param int                             $ttl  Seconds.
+	 * @param string               $key     Transient key.
+	 * @param array<string, mixed> $payload Rows plus the withhold report.
+	 * @param int                  $ttl     Seconds.
 	 */
-	private function remember( string $key, array $rows, int $ttl ): void {
-		set_transient( $key, $rows, $ttl );
+	private function remember( string $key, array $payload, int $ttl ): void {
+		set_transient( $key, $payload, $ttl );
 		if ( ! function_exists( 'get_option' ) ) {
 			return;
 		}
@@ -260,7 +354,8 @@ final class CatalogAdapter {
 	 * @return int Number of transients deleted.
 	 */
 	public function flush_cache(): int {
-		$this->memory = [];
+		$this->memory   = [];
+		$this->withheld = [];
 		if ( ! function_exists( 'get_option' ) ) {
 			return 0;
 		}
