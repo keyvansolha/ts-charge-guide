@@ -70,7 +70,7 @@ final class GuideView {
 <div class="ts-charge" id="ts-charge" dir="rtl" lang="fa">
 	<a class="cg-skip" href="#cg-journey">رفتن به راهنمای انتخاب</a>
 	<?php echo $this->hero(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>
-	<div class="cg-reassurance cg-wrap"><span>لازم نیست همیشه قوی‌ترین را بخری.</span><span>کابل مناسب هم مهم است.</span><span>اول وسایلی که داری را بررسی کنیم.</span></div>
+	<div class="cg-reassurance cg-wrap"><span><?php echo $this->icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput -- fixed inline SVG. ?>لازم نیست همیشه قوی‌ترین را بخری.</span><span><?php echo $this->icon( 'link' ); // phpcs:ignore WordPress.Security.EscapeOutput -- fixed inline SVG. ?>کابل مناسب هم مهم است.</span><span><?php echo $this->icon( 'stack' ); // phpcs:ignore WordPress.Security.EscapeOutput -- fixed inline SVG. ?>اول وسایلی که داری را بررسی کنیم.</span></div>
 	<?php
 		echo $this->journey(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 		echo $this->laptop(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
@@ -100,7 +100,7 @@ final class GuideView {
 		?>
 	<section class="cg-hero cg-wrap">
 		<div class="cg-hero-copy">
-			<h1>شارژ همراهت.<br><span>خیالت راحت‌تر.</span></h1>
+			<h1>پاورت همراهت.<br><span>خیالت راحت‌تر.</span></h1>
 			<p class="cg-lead">لازم نیست وات و آمپر را حفظ باشی؛ فقط بگو چه‌کار می‌کنی، ما انتخاب را ساده می‌کنیم.</p>
 			<div class="cg-actions">
 				<button class="cg-button cg-button--primary" id="cg-start" data-cg-restart>کمکم کن انتخاب کنم<span aria-hidden="true">＋</span></button>
@@ -131,21 +131,21 @@ final class GuideView {
 	<section class="cg-section cg-wrap" id="cg-journey" aria-labelledby="cg-journey-title">
 		<div class="cg-section-top">
 			<div><h2 id="cg-journey-title">از اینجا شروع کنیم.</h2></div>
-			<p>هر مرحله فقط یک انتخاب.<br>اگر مطمئن نیستی، اشکالی ندارد.</p>
+			<p>هر مرحله فقط یک انتخاب.</p>
 		</div>
 		<div class="cg-journey">
 			<aside class="cg-rail">
 				<span class="cg-rail-brand">همراه شارژ</span>
 				<div class="cg-rail-steps" aria-label="مراحل راهنما">
-					<span class="cg-rail-step" data-rail="1" aria-current="step"><span class="cg-rail-num">۱</span> <b>نیازت</b></span>
-					<span class="cg-rail-step" data-rail="2"><span class="cg-rail-num">۲</span> <b>دستگاهت</b></span>
-					<span class="cg-rail-step" data-rail="3"><span class="cg-rail-num">۳</span> <b>اولویتت</b></span>
+					<button type="button" class="cg-rail-step" data-rail="1" aria-current="step"><span class="cg-rail-num">۱</span> <b>نیازت</b></button>
+					<button type="button" class="cg-rail-step" data-rail="2"><span class="cg-rail-num">۲</span> <b>دستگاهت</b></button>
+					<button type="button" class="cg-rail-step" data-rail="3"><span class="cg-rail-num">۳</span> <b>اولویتت</b></button>
 				</div>
 				<p>قرار نیست بیشتر خرج کنی؛<br>قرار است درست‌تر انتخاب کنی.</p>
 			</aside>
 			<div class="cg-wizard" id="cg-wizard">
 				<div class="cg-step" data-cg-step="1">
-					<span class="cg-step-label">قدم <span class="cg-step-num">۱</span> از ۳</span>
+					<span class="cg-step-label">قدم ۱ از ۳</span>
 					<h3 tabindex="-1">چه کمکی از دستم برمیاد؟</h3>
 					<div class="cg-choices">
 						<?php foreach ( $needs as $key => $need ) : ?>
@@ -159,7 +159,7 @@ final class GuideView {
 					<p class="cg-quiet">انتخابت را هر وقت خواستی می‌توانی عوض کنی.</p>
 				</div>
 				<template id="cg-step2">
-					<span class="cg-step-label">قدم <span class="cg-step-num">۲</span> از ۳</span>
+					<span class="cg-step-label">قدم ۲ از ۳</span>
 					<h3 tabindex="-1">بیشتر برای چه دستگاهی؟</h3>
 					<div class="cg-options">
 						<?php foreach ( Content::devices() as $key => $device ) : ?>
@@ -173,7 +173,7 @@ final class GuideView {
 				</template>
 				<?php foreach ( array_keys( $needs ) as $need_key ) : ?>
 					<template id="cg-step3-<?php echo esc_attr( $need_key ); ?>">
-						<span class="cg-step-label">قدم <span class="cg-step-num">۳</span> از ۳</span>
+						<span class="cg-step-label">قدم ۳ از ۳</span>
 						<h3 tabindex="-1">چه چیزی برات مهم‌تره؟</h3>
 						<div class="cg-options">
 							<?php foreach ( Content::priorities( $need_key ) as $row ) : ?>

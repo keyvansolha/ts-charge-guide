@@ -103,6 +103,13 @@ check( 'step 1 is the only visible step at boot', ! $( '[data-cg-step="1"]' ).hi
 
 click( $( '[data-cg-need="powerbank"]' ) );
 check( 'choosing a need reveals step 2', $( '[data-cg-step="1"]' ).hidden && ! $( '#cg-stage' ).hidden && $$( '[data-cg-device]' ).length === 6 );
+check( 'a step that has not been reached cannot be jumped to', $( '[data-rail="3"]' ).disabled );
+check( 'reached steps are marked done, the ones ahead are not', $( '[data-rail="1"]' ).hasAttribute( 'data-done' ) && ! $( '[data-rail="3"]' ).hasAttribute( 'data-done' ) );
+click( $( '[data-rail="1"]' ) );
+check( 'clicking a step circle goes back to that step', ! $( '[data-cg-step="1"]' ).hidden && $( '#cg-stage' ).hidden );
+check( 'the rail marks the step you are on', 'step' === $( '[data-rail="1"]' ).getAttribute( 'aria-current' ) );
+click( $( '[data-cg-need="powerbank"]' ) );
+check( 'answering again returns to step 2', $( '[data-cg-step="1"]' ).hidden && ! $( '#cg-stage' ).hidden );
 check( 'the rail marks the second step', 'step' === $( '[data-rail="2"]' ).getAttribute( 'aria-current' ) );
 
 click( $( '[data-cg-device="iphone-lightning"]' ) );

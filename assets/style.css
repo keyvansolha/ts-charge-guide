@@ -111,7 +111,8 @@
 .cg-choice:hover { border-color: var(--cg-content-link-color); box-shadow: 0 0 0 1px var(--cg-border-subtle); }
 
 .cg-text-button { font-size: 16px; }
-.cg-back { background: none; border: 0; padding: 8px; color: var(--cg-text-muted); text-decoration: underline; text-underline-offset: 5px; min-height: 44px; }
+.cg-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--cg-surface-card); border: 1px solid var(--cg-border-subtle); border-radius: 999px; color: var(--cg-text-strong); font-size: 15px; font-weight: bold; font-family: inherit; min-height: 44px; }
+.cg-back:hover { border-color: var(--cg-brand-navy); color: var(--cg-brand-navy); }
 
 /* ---------------- hero ---------------- */
 
@@ -126,11 +127,12 @@
 .cg-floating-label small { display: block; font-size: 14px; color: var(--cg-text-muted); }
 .cg-mini-icon { width: 42px; height: 42px; display: grid; place-items: center; background: var(--cg-theme-accent); color: var(--cg-brand-navy); font-size: 32px; border-radius: 12px; }
 .cg-mini-icon svg { width: 18px; height: 18px; }
-.cg-floating-label .cg-icon { color: var(--cg-theme-accent); }
+.cg-floating-label .cg-icon { color: var(--cg-brand-navy); }
 .cg-image-caption { position: absolute; bottom: 10px; left: 20px; color: var(--cg-text-body); font-size: 12px; }
 
 .cg-reassurance { display: flex; justify-content: space-between; gap: 20px; padding-top: 24px; padding-bottom: 24px; border-top: 1px solid var(--cg-border-subtle); border-bottom: 1px solid var(--cg-border-subtle); font-size: 15px; }
-.cg-reassurance span::before { content: "✓"; display: inline-block; color: var(--cg-state-success); margin-inline-end: 10px; }
+.cg-reassurance span { display: flex; align-items: center; gap: 10px; }
+.cg-reassurance .cg-icon { color: var(--cg-state-success); }
 
 /* ---------------- wizard ---------------- */
 
@@ -138,10 +140,13 @@
 .cg-rail { padding: 25px; background: var(--cg-surface-raised); position: relative; overflow: hidden; }
 .cg-rail-brand { color: var(--cg-content-heading-color); font-size: 15px; }
 .cg-rail-steps { display: flex; flex-direction: column; gap: 14px; margin-top: 25px; }
-.cg-rail-step { color: var(--cg-text-muted); font-size: 15px; display: flex; gap: 12px; align-items: center; }
-.cg-rail-num, .cg-step-num { display: grid; place-items: center; background: var(--cg-theme-accent); color: var(--cg-brand-navy); border-radius: 50%; font-weight: bold; }
-.cg-rail-num { width: 32px; height: 32px; font-size: 16px; }
-.cg-step-num { display: inline-grid; min-width: 24px; height: 24px; font-size: 14px; vertical-align: -6px; margin: 0 4px; }
+.cg-rail-step { color: var(--cg-text-muted); font-size: 15px; display: flex; gap: 12px; align-items: center; cursor: pointer; text-align: right; font-family: inherit; }
+.cg-rail-step:hover:not(:disabled) .cg-rail-num { outline: 2px solid var(--cg-brand-navy); outline-offset: 2px; }
+.cg-rail-step:disabled { cursor: default; }
+.cg-rail-step:focus-visible { outline: 2px solid var(--cg-theme-accent); outline-offset: 4px; }
+.cg-rail-num { display: grid; place-items: center; width: 32px; height: 32px; font-size: 16px; border-radius: 50%; font-weight: bold; background: var(--cg-brand-navy); color: var(--cg-theme-accent); }
+/* a step you have reached keeps the accent chip; the ones ahead stay navy */
+.cg-rail-step[data-done] .cg-rail-num { background: var(--cg-theme-accent); color: var(--cg-brand-navy); }
 .cg-rail-step[aria-current="step"] { color: var(--cg-text-strong); font-weight: bold; }
 .cg-rail-step[aria-current="step"] b { font-weight: bold; }
 .cg-rail > p { font-size: 14px; margin-top: 25px; color: var(--cg-text-body); }

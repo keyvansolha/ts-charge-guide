@@ -59,15 +59,28 @@ const initWizard = ( root, config ) => {
 		return;
 	}
 
-	const state = { step: 1, need: null, device: null, priority: null, deviceLabel: '', priorityLabel: '' };
+	const state = { step: 1, reached: 1, need: null, device: null, priority: null, deviceLabel: '', priorityLabel: '' };
 
 	const rail = ( step ) => {
+		const current = Math.min( step, 3 );
+		// How far the visitor has got: steps up to here can be jumped back to.
+		state.reached = Math.max( state.reached || 1, current );
 		root.querySelectorAll( '[data-rail]' ).forEach( ( item ) => {
-			const current = Number( item.getAttribute( 'data-rail' ) ) === Math.min( step, 3 );
-			if ( current ) {
+			const n = Number( item.getAttribute( 'data-rail' ) );
+			if ( n === current ) {
 				item.setAttribute( 'aria-current', 'step' );
 			} else {
 				item.removeAttribute( 'aria-current' );
+			}
+			// Reached steps turn green; the ones still ahead stay navy.
+			if ( n <= current ) {
+				item.setAttribute( 'data-done', '1' );
+			} else {
+				item.removeAttribute( 'data-done' );
+			}
+			// Only a step already reached can be opened again.
+			if ( 'BUTTON' === item.tagName ) {
+				item.disabled = n > state.reached;
 			}
 		} );
 	};
@@ -117,6 +130,19 @@ const initWizard = ( root, config ) => {
 			heading.focus( { preventScroll: true } );
 		}
 	};
+
+	// Paint the rail before anything is answered: step 1 current, the rest locked.
+	rail( 1 );
+
+	// Tapping a step circle walks back to it so an answer can be changed.
+	root.querySelectorAll( '[data-rail]' ).forEach( ( item ) => {
+		item.addEventListener( 'click', () => {
+			const n = Number( item.getAttribute( 'data-rail' ) );
+			if ( n && n <= state.reached && n !== state.step ) {
+				goToStep( n );
+			}
+		} );
+	} );
 
 	const renderResult = ( data ) => {
 		const head = el( 'div', { className: 'cg-result-head' } );
