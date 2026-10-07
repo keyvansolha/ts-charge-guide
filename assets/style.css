@@ -268,6 +268,11 @@
 .cg-reading-heading h3 { font-size: 28px; }
 .cg-reading-heading > p { font-size: 14px; color: var(--cg-text-muted); }
 .cg-reading { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+/* The theme's row card sets `margin-top: 30px` on every card after the first —
+   the gap for its own vertical blog lists. In this three-column grid that
+   pushes cards 2 and 3 down and the first one looks misplaced; the grid's gap
+   already spaces them, so the list margin is dropped here. */
+.cg-reading > .blog-row-post-card:not(:first-child) { margin-top: 0; }
 
 /* ---------------- troubleshooting ---------------- */
 
