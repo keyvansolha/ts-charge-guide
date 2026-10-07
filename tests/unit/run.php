@@ -59,6 +59,18 @@ function plugin(): TSChargeGuide\App {
 	return new TSChargeGuide\App();
 }
 
+/**
+ * The version the plugin declares, read out of its own header.
+ *
+ * Assertions use this instead of a literal so a version bump moves every
+ * expectation with it and cannot half-land.
+ *
+ * @return string
+ */
+function plugin_version(): string {
+	return preg_match( '/Version:\s*([0-9.]+)/', src( 'ts-charge-guide.php' ), $m ) ? $m[1] : '';
+}
+
 /* ---------------- settings ---------------- */
 
 ts_cg_reset();
@@ -259,7 +271,7 @@ check( 'the guide no longer writes HTML from a string template', 1 === preg_matc
 check( 'no PHP file renders guide HTML outside the view', ! str_contains( src( 'ts-charge-guide.php' ), 'file_get_contents' ) && ! str_contains( src( 'includes/src/LandingPage.php' ), 'file_get_contents' ) );
 check( 'asset loading is gated on the guide request', str_contains( src( 'includes/src/Assets.php' ), 'is_guide_request' ) );
 check( 'no unconditional script enqueue exists', ! preg_match( '/wp_enqueue_script\s*\(/', $joined ) );
-check( 'asset versions come from the constant', ! preg_match( "/\?v=0\.4\.0/", $joined ) && str_contains( src( 'ts-charge-guide.php' ), "'0.4.0'" ) );
+check( 'asset versions come from the constant', ! preg_match( '/\?v=[0-9.]+/', $joined ) && str_contains( src( 'ts-charge-guide.php' ), "'" . plugin_version() . "'" ) );
 check( 'no app directory or duplicate fragment is shipped', ! is_dir( __DIR__ . '/../../app' ) && ! is_file( __DIR__ . '/../../assets/fragment.html' ) && ! is_file( __DIR__ . '/../../assets/native.js' ) );
 check( 'no font file is shipped with the plugin', [] === glob( __DIR__ . '/../../assets/{fonts,images}/*.{woff,woff2,ttf}', GLOB_BRACE ) + glob( __DIR__ . '/../../assets/*.{woff,woff2,ttf}', GLOB_BRACE ) );
 check( 'uninstall removes only the plugin option and transients', str_contains( src( 'uninstall.php' ), 'delete_option' ) && ! str_contains( src( 'uninstall.php' ), 'wp-config' ) );
@@ -328,7 +340,7 @@ check( 'the guide stylesheets are enqueued only here', in_array( 'ts-charge-toke
 check( 'the token layer is a dependency, never a copy', in_array( 'amazing-theme-system', ( $GLOBALS['ts_cg_styles'][0][3] ?? [] ), true ) );
 $module_ids = array_column( $GLOBALS['ts_cg_modules'], 1 );
 check( 'one entry module is enqueued, the rest registered', in_array( 'ts-charge-guide/entry', $module_ids, true ) && in_array( 'ts-charge-guide/wizard', $module_ids, true ) );
-check( 'every enqueued asset carries the plugin version', in_array( '0.4.0', array_column( $GLOBALS['ts_cg_styles'], 4 ), true ) );
+check( 'every enqueued asset carries the plugin version', in_array( plugin_version(), array_column( $GLOBALS['ts_cg_styles'], 4 ), true ) );
 
 echo "\n{$pass} passed, {$fail} failed\n";
 exit( $fail ? 1 : 0 );

@@ -21,9 +21,15 @@ function plugin_header( string $text, string $field ): string {
 	return preg_match( $pattern, $text, $match ) ? trim( $match[1] ) : '';
 }
 
+// The version lives in two stamps that have to agree: the plugin header
+// WordPress reads and package.json. Read the expectation from the manifest
+// instead of repeating the literal, so a bump cannot land in one place only.
+$manifest = json_decode( (string) file_get_contents( __DIR__ . '/../../package.json' ), true );
+$version  = is_array( $manifest ) ? (string) ( $manifest['version'] ?? '' ) : '';
+
 $expected = [
 	'Plugin Name'      => 'TehranSpeaker Charge Guide',
-	'Version'          => '0.4.0',
+	'Version'          => $version,
 	'Requires PHP'     => '8.0',
 	'Requires Plugins' => 'woocommerce',
 	'Text Domain'      => 'ts-charge-guide',
