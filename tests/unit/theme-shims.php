@@ -73,6 +73,27 @@ function url_to_postid( $url ) {
 	return (int) ( $GLOBALS['ts_cg_post_paths'][ $path ] ?? 0 );
 }
 
+/** Permalink of a fake post (the reading cards compare it with the path). */
+function get_permalink( $id = 0 ) {
+	$key = (int) $id;
+	return isset( $GLOBALS['ts_cg_posts'][ $key ]['permalink'] ) ? (string) $GLOBALS['ts_cg_posts'][ $key ]['permalink'] : '';
+}
+
+/** The object the template is rendering. */
+function get_queried_object_id() {
+	return (int) ( $GLOBALS['ts_cg_queried_page'] ?? 0 );
+}
+
+/** Trim a trailing slash. */
+function untrailingslashit( $value ) {
+	return rtrim( (string) $value, '/\\' );
+}
+
+/** URL parser. */
+function wp_parse_url( $url, $component = -1 ) {
+	return -1 === $component ? parse_url( (string) $url ) : parse_url( (string) $url, $component );
+}
+
 /** Current post id in the loop. */
 function get_the_ID() {
 	return (int) $GLOBALS['ts_cg_current'];

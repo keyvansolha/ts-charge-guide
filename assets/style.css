@@ -290,12 +290,13 @@
 
 /* ---------------- products ---------------- */
 
-/* The product cards themselves come from the theme (`.product-simple-card`,
-   rendered by the theme's own partial). These two rules are only the layout the
-   plugin owns: one card is 280px wide with a 30px row gap, both read off the
-   theme's own card grid. */
+/* The cell sizes come from the theme's own card grid: the card is 280px at its
+   widest and the row gap is 30px, both read off the theme. `flex: 1 1 0` with
+   that ceiling makes a row always fill its container — 3 per row at the width
+   the theme's own listings use (254px each, exactly like /shop/), 4 in a wider
+   column — instead of leaving a fixed-width gap at the end of the row. */
 .cg-products-grid { display: flex; flex-wrap: wrap; gap: 30px; }
-.cg-cell { flex: 0 1 280px; min-width: 0; }
+.cg-cell { flex: 1 1 0; min-width: 240px; max-width: 280px; }
 
 /* ---------------- faq and closing ---------------- */
 

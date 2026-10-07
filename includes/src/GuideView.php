@@ -520,16 +520,33 @@ final class GuideView {
 	}
 
 	/**
-	 * The post a reading item points at, 0 when the path is not a post.
+	 * The post a reading item points at, 0 when the path is not that post.
+	 *
+	 * `url_to_postid()` can answer with a different document than the one asked
+	 * for — observed on the live site, where the article's path resolved to the
+	 * page rendering the guide, so the first card showed the guide itself. The
+	 * resolved post therefore has to prove it is the requested path, and the
+	 * page currently being rendered is never accepted; anything else falls back
+	 * to the plain link, which cannot point at the wrong article.
 	 *
 	 * @param string $path Site-relative path.
 	 * @return int
 	 */
 	private function reading_post_id( string $path ): int {
-		if ( ! function_exists( 'url_to_postid' ) || ! function_exists( 'home_url' ) ) {
+		if ( ! function_exists( 'url_to_postid' ) || ! function_exists( 'home_url' ) || ! function_exists( 'get_permalink' ) ) {
 			return 0;
 		}
-		return (int) url_to_postid( home_url( $path ) );
+		$id = (int) url_to_postid( home_url( $path ) );
+		if ( $id < 1 ) {
+			return 0;
+		}
+		if ( function_exists( 'get_queried_object_id' ) && $id === (int) get_queried_object_id() ) {
+			return 0;
+		}
+		$path_of = static function ( string $url ): string {
+			return function_exists( 'untrailingslashit' ) ? untrailingslashit( (string) wp_parse_url( $url, PHP_URL_PATH ) ) : rtrim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
+		};
+		return $path_of( home_url( $path ) ) === $path_of( (string) get_permalink( $id ) ) ? $id : 0;
 	}
 
 	/**
