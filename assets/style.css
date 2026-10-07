@@ -125,6 +125,8 @@
 .cg-floating-label { position: absolute; bottom: 35px; right: -22px; background: var(--cg-surface-card); border: 1px solid var(--cg-border-subtle); border-radius: 18px; display: flex; align-items: center; gap: 12px; padding: 16px 23px; box-shadow: var(--cg-shadow-soft); }
 .cg-floating-label small { display: block; font-size: 14px; color: var(--cg-text-muted); }
 .cg-mini-icon { width: 42px; height: 42px; display: grid; place-items: center; background: var(--cg-theme-accent); color: var(--cg-brand-navy); font-size: 32px; border-radius: 12px; }
+.cg-mini-icon svg { width: 18px; height: 18px; }
+.cg-floating-label .cg-icon { color: var(--cg-theme-accent); }
 .cg-image-caption { position: absolute; bottom: 10px; left: 20px; color: var(--cg-text-body); font-size: 12px; }
 
 .cg-reassurance { display: flex; justify-content: space-between; gap: 20px; padding-top: 24px; padding-bottom: 24px; border-top: 1px solid var(--cg-border-subtle); border-bottom: 1px solid var(--cg-border-subtle); font-size: 15px; }

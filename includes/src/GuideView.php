@@ -110,7 +110,7 @@ final class GuideView {
 		</div>
 		<div class="cg-hero-visual">
 			<img src="<?php echo esc_url( $this->image_url( $hero['file'] ) ); ?>" alt="<?php echo esc_attr( $hero['alt'] ); ?>" width="<?php echo (int) $hero['width']; ?>" height="<?php echo (int) $hero['height']; ?>" fetchpriority="high" decoding="async">
-			<div class="cg-floating-label"><span class="cg-mini-icon" aria-hidden="true">ϟ</span><div>همراه روزهای شلوغ<small>یک انتخاب، متناسب با نیاز تو</small></div></div>
+			<div class="cg-floating-label"><span class="cg-mini-icon" aria-hidden="true"><?php echo $this->icon( 'bolt' ); // phpcs:ignore WordPress.Security.EscapeOutput -- fixed inline SVG from icon(). ?></span><div>همراه روزهای شلوغ<small>یک انتخاب، متناسب با نیاز تو</small></div></div>
 			<span class="cg-image-caption">تصویر فضاسازی</span>
 		</div>
 	</section>
