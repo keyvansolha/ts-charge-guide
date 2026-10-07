@@ -235,8 +235,16 @@ function get_queried_object(): ?object {
 
 /** Post lookup. */
 function get_post( $id ) {
-	if ( (int) $id === (int) ( $GLOBALS['ts_cg_queried_page'] ?? 0 ) || isset( $GLOBALS['ts_cg_pages'][ (int) $id ] ) ) {
-		return (object) [ 'ID' => (int) $id, 'post_type' => 'page', 'post_status' => 'publish' ];
+	$id = (int) $id;
+	// Fake posts registered by the theme-side fixtures (blog cards read them).
+	if ( isset( $GLOBALS['ts_cg_posts'][ $id ] ) ) {
+		$post             = new stdClass();
+		$post->ID         = $id;
+		$post->post_title = (string) ( $GLOBALS['ts_cg_posts'][ $id ]['title'] ?? '' );
+		return $post;
+	}
+	if ( $id === (int) ( $GLOBALS['ts_cg_queried_page'] ?? 0 ) || isset( $GLOBALS['ts_cg_pages'][ $id ] ) ) {
+		return (object) [ 'ID' => $id, 'post_type' => 'page', 'post_status' => 'publish' ];
 	}
 	return null;
 }
@@ -252,6 +260,9 @@ function get_pages( array $args = [] ): array {
 /** Page title. */
 function get_the_title( $post ): string {
 	$id = is_object( $post ) ? (int) $post->ID : (int) $post;
+	if ( isset( $GLOBALS['ts_cg_posts'][ $id ]['title'] ) ) {
+		return (string) $GLOBALS['ts_cg_posts'][ $id ]['title'];
+	}
 	return (string) ( $GLOBALS['ts_cg_pages'][ $id ] ?? 'Page' );
 }
 
@@ -363,6 +374,9 @@ function get_edit_post_link( $id, string $context = 'display' ): string {
 
 /** Reset every shim store between test files. */
 function ts_cg_reset(): void {
+	if ( function_exists( 'ts_cg_theme_reset' ) ) {
+		ts_cg_theme_reset();
+	}
 	$GLOBALS['ts_cg_options']      = [];
 	$GLOBALS['ts_cg_transients']   = [];
 	$GLOBALS['ts_cg_query_log']    = [];

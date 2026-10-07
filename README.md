@@ -55,6 +55,12 @@ Version: **0.5.0** · Requires PHP **8.0** · Requires **WooCommerce** · Author
   قاعده بی‌صدا چیزی را از دید خارج نکند.
 - نتیجه پرسش‌وپاسخ هم از همان کاتالوگ انتخاب می‌شود، نه از فهرست ثابت
   (`Recommendation::build()`).
+- **کارت‌ها مال قالب‌اند.** افزونه کارت محصول و کارت مطلب نمی‌سازد: `GuideView` همان partialهای
+  قالب را رندر می‌کند (`THEME_COMPONENTS/product-cards/simple-card(-mobile).php` با معیار
+  `IS_MOBILE`، و `THEME_LIB_DIR . 'Blog/template/cards/blog-card.php'` برای سه مقاله مجله) و
+  استایل کارت را با هندل `amazing-product-card` از قالب می‌گیرد. اگر آن هندل ثبت نشده باشد (قالب
+  دیگری فعال است)، کارت‌ها بدون استایل می‌مانند — یعنی نصب این نسخه به‌همراه تغییر قالب
+  (`assets/scss/product-card.scss` + ثبت هندل‌ها) معنا دارد.
 
 **اثبات خالی‌بودن:** با تنظیمات خالی، `CatalogAdapter::products()` آرایه خالی برمی‌گرداند و حتی یک
 کوئری هم اجرا نمی‌شود (`tests/unit/run.php` → «with no category assigned the catalog returns nothing»).

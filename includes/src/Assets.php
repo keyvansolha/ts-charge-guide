@@ -27,12 +27,21 @@ final class Assets {
 	private LandingPage $landing_page;
 
 	/**
+	 * Settings service, to know whether the product grid will render.
+	 *
+	 * @var Settings
+	 */
+	private Settings $settings;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LandingPage $landing_page Landing-page service.
+	 * @param Settings    $settings     Settings.
 	 */
-	public function __construct( LandingPage $landing_page ) {
+	public function __construct( LandingPage $landing_page, Settings $settings ) {
 		$this->landing_page = $landing_page;
+		$this->settings     = $settings;
 	}
 
 	/**
@@ -52,6 +61,22 @@ final class Assets {
 
 		wp_enqueue_style( 'ts-charge-tokens', $base . 'token-bridge.css', [ 'amazing-theme-system' ], $ver );
 		wp_enqueue_style( 'ts-charge-guide', $base . 'style.css', [ 'ts-charge-tokens' ], $ver );
+
+		// The product and blog cards are the theme's own components, so the guide
+		// asks the theme for their stylesheet instead of styling a card of its
+		// own. The blog cards under the battery section always render, hence the
+		// stylesheet is always asked for; the card's favourite button only exists
+		// in the product grid, so its script waits for a configured catalog.
+		if ( wp_style_is( 'amazing-product-card', 'registered' ) ) {
+			wp_enqueue_style( 'amazing-product-card' );
+		}
+		if ( $this->settings->has_product_scope() ) {
+			foreach ( [ 'wbsAjax', 'wbsFavorite' ] as $handle ) {
+				if ( wp_script_is( $handle, 'registered' ) ) {
+					wp_enqueue_script( $handle );
+				}
+			}
+		}
 
 		$this->register_modules( $base, $ver );
 		wp_enqueue_script_module( 'ts-charge-guide/entry' );

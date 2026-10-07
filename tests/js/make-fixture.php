@@ -15,11 +15,19 @@ define( 'ABSPATH', __DIR__ . '/../../' );
 define( 'MINUTE_IN_SECONDS', 60 );
 require __DIR__ . '/../unit/wp-shims.php';
 require __DIR__ . '/../unit/wc-shims.php';
+require __DIR__ . '/../unit/theme-shims.php';
 require __DIR__ . '/../../ts-charge-guide.php';
 
 ts_cg_reset();
 ts_cg_term( 500, 'پاوربانک', 'powerbank', 3 );
 ts_cg_term( 501, 'شارژر', 'charger', 2 );
+
+// The magazine articles under the battery section are real posts on the site
+// (checked live); the theme's blog card reads them through the loop. Only two of
+// the three paths are registered here, so the third exercises the plain-link
+// fallback the guide uses when a path is not a post.
+ts_cg_post( 7001, [ 'path' => '/what-is-a-battery-charge-cycle/', 'title' => 'سیکل شارژ باتری چیست و چگونه محاسبه می‌شود؟', 'excerpt' => 'برای آشنایی با مفهوم چرخه و تفاوت آن با دفعات اتصال به شارژر.', 'permalink' => '/what-is-a-battery-charge-cycle/', 'thumb' => '/img/7001.webp' ] );
+ts_cg_post( 7002, [ 'path' => '/pd-qc-pps-charger-guide/', 'title' => 'تفاوت PD و QC و PPS، راهنمای انتخاب شارژر', 'excerpt' => 'چرا وات بیشتر به‌تنهایی کافی نیست؟', 'permalink' => '/pd-qc-pps-charger-guide/', 'thumb' => '/img/7002.webp' ] );
 ts_cg_product( 901, [ 'name' => 'پاوربانک بیسوس مدل A 20000', 'cats' => [ 'powerbank' ], 'price' => 2900000.0 ] );
 ts_cg_product( 902, [ 'name' => 'پاوربانک بیسوس مدل B 10000 (ناموجود)', 'cats' => [ 'powerbank' ], 'price' => 1900000.0, 'in_stock' => false ] );
 ts_cg_product( 903, [ 'name' => 'پاوربانک بیسوس مدل C 30000', 'cats' => [ 'powerbank' ], 'price' => 3900000.0 ] );

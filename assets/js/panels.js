@@ -40,7 +40,7 @@ const bindTabs = ( root, options ) => {
  */
 const bindProductFilter = ( root ) => {
 	const buttons = Array.from( root.querySelectorAll( '[data-cg-filter]' ) );
-	const cards = Array.from( root.querySelectorAll( '.cg-card' ) );
+	const cards = Array.from( root.querySelectorAll( '.cg-cell' ) );
 	if ( ! buttons.length || ! cards.length ) {
 		return;
 	}

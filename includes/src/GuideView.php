@@ -283,16 +283,22 @@ final class GuideView {
 			<p>سه مطلب مرتبط برای ادامه مطالعه</p>
 		</div>
 		<div class="cg-reading">
-			<?php foreach ( Content::reading() as $card ) : ?>
-				<a class="cg-reading-card" href="<?php echo esc_url( home_url( $card['path'] ) ); ?>">
-					<img src="<?php echo esc_url( $this->image_url( $card['image'] ) ); ?>" alt="<?php echo esc_attr( $card['alt'] ); ?>" width="1530" height="930" loading="lazy" decoding="async">
-					<div>
-						<span class="cg-reading-topic"><?php echo esc_html( $card['topic'] ); ?></span>
-						<h4><?php echo esc_html( $card['title'] ); ?></h4>
-						<p><?php echo esc_html( $card['summary'] ); ?></p>
-						<span class="cg-reading-cta">خواندن مقاله در تهران اسپیکر</span>
-					</div>
-				</a>
+			<?php
+			foreach ( Content::reading() as $item ) :
+				$blog_card = $this->blog_card_file();
+				$post_id   = '' === $blog_card ? 0 : $this->reading_post_id( (string) $item['path'] );
+				$post      = $post_id > 0 && function_exists( 'get_post' ) ? get_post( $post_id ) : null;
+				if ( $post ) :
+					// The theme's own post card: it reads the post through the
+					// loop (title, permalink, excerpt, thumbnail, date).
+					setup_postdata( $post );
+					$blogCardHeadingLevel = 3;
+					require $blog_card;
+					wp_reset_postdata();
+					continue;
+				endif;
+				?>
+				<a class="cg-reading-link" href="<?php echo esc_url( home_url( (string) $item['path'] ) ); ?>"><?php echo esc_html( (string) $item['title'] ); ?></a>
 			<?php endforeach; ?>
 		</div>
 	</section>
@@ -413,10 +419,17 @@ final class GuideView {
 				<button class="cg-filter" data-cg-filter="charger" aria-pressed="false">شارژر</button>
 			</div>
 		</div>
-		<p class="cg-catalog-note">این‌ها محصولات <b>موجودِ</b> همین دسته‌بندی در فروشگاه‌اند؛ مشخصات، قیمت و موجودی نهایی را در صفحه هر محصول ببین. سازگاری شارژ سریع به مدل دستگاه و کابل هم بستگی دارد.</p>
-		<div class="cg-grid" id="cg-grid">
+		<div id="cg-grid" class="products cg-products-grid centered-flex justify-content-start flex-wrap">
 			<?php foreach ( $this->catalog as $row ) : ?>
-				<?php echo $this->card( $row ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>
+				<?php
+				$product = $this->product_for( $row );
+				if ( ! $product ) :
+					continue;
+				endif;
+				?>
+				<div class="cg-cell" data-cg-kind="<?php echo esc_attr( (string) ( $row['kind'] ?? '' ) ); ?>">
+					<?php $this->theme_product_card( $product ); ?>
+				</div>
 			<?php endforeach; ?>
 		</div>
 	</section>
@@ -425,36 +438,98 @@ final class GuideView {
 	}
 
 	/**
-	 * One product card.
+	 * The live WooCommerce product behind a catalog row.
+	 *
+	 * The theme's card component renders a product, not a data row, so the
+	 * row's id is resolved back to the product object (WooCommerce serves it
+	 * from the object cache filled by the catalog query).
 	 *
 	 * @param array<string, mixed> $row Catalog row.
+	 * @return object|null
+	 */
+	private function product_for( array $row ): ?object {
+		if ( ! function_exists( 'wc_get_product' ) ) {
+			return null;
+		}
+		$product = wc_get_product( (int) ( $row['id'] ?? 0 ) );
+		return is_object( $product ) ? $product : null;
+	}
+
+	/**
+	 * Render one product with the theme's own card component.
+	 *
+	 * The theme's card parts read post meta through the loop (get_the_ID(),
+	 * `h2-title`, `badge-title`, `product-status`), so the product has to be
+	 * the current post while the card renders. The flags keep the card to its
+	 * plain form: no gallery swiper, no countdown, no compare button.
+	 *
+	 * @param object $product WooCommerce product.
+	 * @return void
+	 */
+	private function theme_product_card( object $product ): void {
+		$file = $this->theme_card_file();
+		if ( '' === $file ) {
+			return;
+		}
+		$post = function_exists( 'get_post' ) ? get_post( (int) $product->get_id() ) : null;
+		if ( $post ) {
+			setup_postdata( $post );
+		}
+
+		$filter       = [
+			'activeCompare' => false,
+			'compareItems'  => [],
+		];
+		$args         = [ 'isAmazing' => false ];
+		$imageGallery = false;
+
+		require $file;
+
+		if ( $post ) {
+			wp_reset_postdata();
+		}
+	}
+
+	/**
+	 * The theme's product card partial for this device, '' when unavailable.
+	 *
+	 * The theme picks the card by device (`IS_MOBILE`, a user-agent test), not
+	 * by viewport width, so the guide does the same.
+	 *
 	 * @return string
 	 */
-	private function card( array $row ): string {
-		$kind_label = 'charger' === ( $row['kind'] ?? '' ) ? 'شارژر' : 'پاوربانک';
-		$meta       = trim( implode( ' · ', array_filter( [ (string) ( $row['brand'] ?? '' ), $kind_label ] ) ) );
-		ob_start();
-		?>
-		<article class="cg-card" data-cg-kind="<?php echo esc_attr( (string) ( $row['kind'] ?? '' ) ); ?>">
-			<div class="cg-card-image">
-				<?php if ( ! empty( $row['image'] ) ) : ?>
-					<img src="<?php echo esc_url( (string) $row['image'] ); ?>" alt="<?php echo esc_attr( (string) $row['name'] ); ?>" width="320" height="320" loading="lazy" decoding="async">
-				<?php else : ?>
-					<span class="cg-card-placeholder" role="img" aria-label="<?php echo esc_attr( (string) $row['name'] ); ?>"></span>
-				<?php endif; ?>
-			</div>
-			<span class="cg-card-kind"><?php echo esc_html( $meta ); ?></span>
-			<h3><?php echo esc_html( (string) $row['name'] ); ?></h3>
-			<?php if ( '' !== (string) $row['priceHtml'] ) : ?>
-				<p class="cg-card-price"><?php echo wp_kses_post( (string) $row['priceHtml'] ); ?></p>
-			<?php endif; ?>
-			<?php if ( empty( $row['inStock'] ) ) : ?>
-				<p class="cg-card-stock">در حال حاضر ناموجود</p>
-			<?php endif; ?>
-			<a href="<?php echo esc_url( (string) $row['url'] ); ?>">مشخصات و قیمت روز</a>
-		</article>
-		<?php
-		return (string) ob_get_clean();
+	private function theme_card_file(): string {
+		if ( ! defined( 'THEME_COMPONENTS' ) ) {
+			return '';
+		}
+		$file = THEME_COMPONENTS . ( defined( 'IS_MOBILE' ) && IS_MOBILE ? 'product-cards/simple-card-mobile.php' : 'product-cards/simple-card.php' );
+		return is_readable( $file ) ? $file : '';
+	}
+
+	/**
+	 * The theme's blog card partial, '' when unavailable.
+	 *
+	 * @return string
+	 */
+	private function blog_card_file(): string {
+		if ( ! defined( 'THEME_LIB_DIR' ) ) {
+			return '';
+		}
+		$file = THEME_LIB_DIR . 'Blog/template/cards/blog-card.php';
+		return is_readable( $file ) ? $file : '';
+	}
+
+	/**
+	 * The post a reading item points at, 0 when the path is not a post.
+	 *
+	 * @param string $path Site-relative path.
+	 * @return int
+	 */
+	private function reading_post_id( string $path ): int {
+		if ( ! function_exists( 'url_to_postid' ) || ! function_exists( 'home_url' ) ) {
+			return 0;
+		}
+		return (int) url_to_postid( home_url( $path ) );
 	}
 
 	/**

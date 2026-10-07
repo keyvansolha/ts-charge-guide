@@ -66,7 +66,7 @@ final class App {
 		$this->settings     = new Settings();
 		$this->catalog      = new CatalogAdapter( $this->settings );
 		$this->landing_page = new LandingPage( $this->settings, $this->catalog );
-		$this->assets       = new Assets( $this->landing_page );
+		$this->assets       = new Assets( $this->landing_page, $this->settings );
 		$this->recommend    = new Rest\RecommendController( $this->settings, $this->catalog );
 		$this->admin        = new AdminScreens( $this->settings, $this->catalog );
 	}

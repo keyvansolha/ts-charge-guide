@@ -94,10 +94,11 @@ const $ = ( selector ) => root.querySelector( selector );
 const $$ = ( selector ) => Array.from( root.querySelectorAll( selector ) );
 const click = ( node ) => node.dispatchEvent( new dom.window.MouseEvent( 'click', { bubbles: true } ) );
 
-check( 'the fixture is the real rendered guide', null !== root && $$( '.cg-card' ).length === 4 );
-check( 'the escaped product name is text, not markup', $$( '.cg-card h3' ).some( ( h ) => h.textContent.includes( '<script>' ) ) && 0 === $$( '.cg-card script' ).length );
-check( 'the out-of-stock product is not rendered at all', ! $$( '.cg-card' ).some( ( c ) => c.textContent.includes( 'ناموجود' ) ) );
-check( 'no card claims an unavailable item is in stock', 0 === $$( '.cg-card' ).filter( ( c ) => c.textContent.includes( 'ناموجود' ) ).length );
+check( 'the fixture is the real rendered guide', null !== root && $$( '.cg-cell' ).length === 4 );
+check( 'the cards are the theme component, not a guide card', 4 === $$( '.cg-cell .product-simple-card' ).length && 0 === $$( '.cg-card' ).length );
+check( 'the escaped product name is text, not markup', $$( '.product-simple-card h2' ).some( ( h ) => h.textContent.includes( '<script>' ) ) && 0 === $$( '.product-simple-card script' ).length );
+check( 'the out-of-stock product is not rendered at all', ! $$( '.product-simple-card' ).some( ( c ) => c.textContent.includes( 'ناموجود' ) ) );
+check( 'the reading cards are the theme post card', 2 === $$( '.blog-row-post-card' ).length && $$( '.blog-row-post-card' ).every( ( c ) => c.classList.contains( 'full-card' ) ) );
 check( 'step 1 is the only visible step at boot', ! $( '[data-cg-step="1"]' ).hidden && $( '#cg-stage' ).hidden && $( '#cg-result' ).hidden );
 
 click( $( '[data-cg-need="powerbank"]' ) );
@@ -152,9 +153,9 @@ check( 'switching the issue shows the matching steps', ! $( '[data-cg-issue-pane
 
 const filterButtons = $$( '[data-cg-filter]' );
 click( filterButtons.find( ( b ) => 'powerbank' === b.getAttribute( 'data-cg-filter' ) ) );
-check( 'the product filter hides the other kind', 2 === $$( '.cg-card' ).filter( ( c ) => ! c.hidden ).length && $$( '.cg-card' )[ 0 ].hidden === false );
+check( 'the product filter hides the other kind', 2 === $$( '.cg-cell' ).filter( ( c ) => ! c.hidden ).length && $$( '.cg-cell' )[ 0 ].hidden === false );
 click( filterButtons.find( ( b ) => 'all' === b.getAttribute( 'data-cg-filter' ) ) );
-check( 'clearing the filter shows everything again', 4 === $$( '.cg-card' ).filter( ( c ) => ! c.hidden ).length );
+check( 'clearing the filter shows everything again', 4 === $$( '.cg-cell' ).filter( ( c ) => ! c.hidden ).length );
 
 console.log( `\n${ pass } passed, ${ fail } failed` );
 process.exit( fail ? 1 : 0 );

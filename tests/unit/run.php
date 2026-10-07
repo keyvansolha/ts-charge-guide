@@ -12,6 +12,7 @@ define( 'MINUTE_IN_SECONDS', 60 );
 require __DIR__ . '/wp-shims.php';
 require __DIR__ . '/wc-shims.php';
 require __DIR__ . '/rest-shims.php';
+require __DIR__ . '/theme-shims.php';
 require __DIR__ . '/../../ts-charge-guide.php';
 
 use TSChargeGuide\CatalogAdapter;
@@ -216,6 +217,17 @@ $danger = [
 		'brand'     => 'B<script>',
 	],
 ];
+// The card the guide renders is the theme's component, so the hostile payload
+// is planted where that component reads it: the product's own fields.
+$GLOBALS['ts_cg_brands'][999] = 'B<script>';
+ts_cg_product( 999, [
+	'name'       => 'شارژر <script>alert(1)</script>',
+	'cats'       => [ 'charger' ],
+	'price'      => 10.0,
+	'price_html' => '<span class="price">۱۰ <b>تومان</b></span><script>alert(2)</script>',
+	'permalink'  => 'https://store.example/product/999/?x="onerror=alert(1)',
+	'image_id'   => 999,
+] );
 $risky = ( new GuideView( $config, $danger ) )->render();
 check( 'a hostile product name is escaped, never executed', ! str_contains( $risky, '<script>alert(1)' ) && str_contains( $risky, '&lt;script&gt;' ) );
 check( 'hostile markup in the price field is stripped', ! str_contains( $risky, 'alert(2)' ) );
@@ -270,11 +282,43 @@ check( 'no abandoned embedding code remains', ! str_contains( $joined, 'postMess
 check( 'the guide no longer writes HTML from a string template', 1 === preg_match_all( '/\.innerHTML\s*=/', src( 'assets/js/wizard.js' ) ) && str_contains( src( 'assets/js/wizard.js' ), 'safeMarkup' ) && ! preg_match( '/\.innerHTML\s*=/', src( 'assets/js/panels.js' ) . src( 'assets/js/entry.js' ) . src( 'assets/js/dom.js' ) . src( 'assets/js/rest.js' ) ) );
 check( 'no PHP file renders guide HTML outside the view', ! str_contains( src( 'ts-charge-guide.php' ), 'file_get_contents' ) && ! str_contains( src( 'includes/src/LandingPage.php' ), 'file_get_contents' ) );
 check( 'asset loading is gated on the guide request', str_contains( src( 'includes/src/Assets.php' ), 'is_guide_request' ) );
-check( 'no unconditional script enqueue exists', ! preg_match( '/wp_enqueue_script\s*\(/', $joined ) );
+check( 'no script is enqueued by URL', ! preg_match( '/wp_enqueue_script\s*\(\s*[\'"][^\'"]*\.js/', $joined ) );
+check( 'the theme script is enqueued only when the theme registered it', str_contains( src( 'includes/src/Assets.php' ), "wp_script_is( \$handle, 'registered' )" ) );
 check( 'asset versions come from the constant', ! preg_match( '/\?v=[0-9.]+/', $joined ) && str_contains( src( 'ts-charge-guide.php' ), "'" . plugin_version() . "'" ) );
 check( 'no app directory or duplicate fragment is shipped', ! is_dir( __DIR__ . '/../../app' ) && ! is_file( __DIR__ . '/../../assets/fragment.html' ) && ! is_file( __DIR__ . '/../../assets/native.js' ) );
 check( 'no font file is shipped with the plugin', [] === glob( __DIR__ . '/../../assets/{fonts,images}/*.{woff,woff2,ttf}', GLOB_BRACE ) + glob( __DIR__ . '/../../assets/*.{woff,woff2,ttf}', GLOB_BRACE ) );
 check( 'uninstall removes only the plugin option and transients', str_contains( src( 'uninstall.php' ), 'delete_option' ) && ! str_contains( src( 'uninstall.php' ), 'wp-config' ) );
+
+/* ---------------- cards come from the theme ---------------- */
+
+ts_cg_reset();
+ts_cg_term( 500, 'پاوربانک', 'powerbank', 6 );
+ts_cg_term( 501, 'شارژر', 'charger', 6 );
+ts_cg_product( 901, [ 'name' => 'پاوربانک الف', 'cats' => [ 'powerbank' ], 'price' => 900000.0 ] );
+ts_cg_product( 904, [ 'name' => 'شارژر الف', 'cats' => [ 'charger' ], 'price' => 300000.0 ] );
+ts_cg_post( 7001, [ 'path' => '/what-is-a-battery-charge-cycle/', 'title' => 'سیکل شارژ باتری', 'excerpt' => 'درباره چرخه شارژ.', 'permalink' => '/what-is-a-battery-charge-cycle/', 'thumb' => '/img/7001.webp' ] );
+update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 6 ] );
+
+$app   = plugin();
+$guide = ( new GuideView( [ 'endpoint' => 'https://store.example/wp-json/ts-charge/v1/recommend', 'nonce' => 'n', 'hasProducts' => true, 'error' => 'x' ], $app->catalog->products() ) )->render();
+
+check( 'the grid renders the theme card component', 2 === substr_count( $guide, 'class="product-simple-card"' ) );
+check( 'the grid wraps each card in a kind cell, not in a guide card', 2 === substr_count( $guide, 'class="cg-cell"' ) && ! str_contains( $guide, 'cg-card' ) );
+check( 'the card is rendered from the theme partial, by device', str_contains( src( 'includes/src/GuideView.php' ), 'THEME_COMPONENTS' ) && str_contains( src( 'includes/src/GuideView.php' ), "'product-cards/simple-card-mobile.php'" ) );
+check( 'the guide renders no product card markup of its own', ! str_contains( src( 'includes/src/GuideView.php' ), 'cg-card' ) && ! str_contains( src( 'assets/style.css' ), '.cg-card' ) );
+check( 'a real reading path renders the theme post card', str_contains( $guide, 'class="blog-row-post-card full-card shadow-bottom' ) && str_contains( $guide, 'سیکل شارژ باتری' ) );
+check( 'a reading path that is not a post falls back to a plain link', str_contains( $guide, 'class="cg-reading-link"' ) );
+check( 'the guide asks the theme for the card stylesheet and its script', str_contains( src( 'includes/src/Assets.php' ), "'amazing-product-card'" ) && str_contains( src( 'includes/src/Assets.php' ), "'wbsFavorite'" ) );
+
+// Put the guide on a page, so the asset service considers this a guide request.
+$GLOBALS['ts_cg_pages']              = [ 12 => 'راهنمای شارژ' ];
+update_option( 'ts_charge_guide_settings', [ 'page_id' => 12, 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 6 ] );
+$GLOBALS['ts_cg_queried_page']       = 12;
+$GLOBALS['ts_cg_scripts_registered'] = [ 'wbsAjax', 'wbsFavorite' ];
+$app = plugin();
+$app->assets->enqueue();
+check( 'the theme card stylesheet is enqueued on the guide page', in_array( 'amazing-product-card', array_column( $GLOBALS['ts_cg_styles'], 1 ), true ) );
+check( 'the card script is enqueued once a catalog is configured', in_array( 'wbsFavorite', $GLOBALS['ts_cg_scripts'], true ) && in_array( 'wbsAjax', $GLOBALS['ts_cg_scripts'], true ) );
 
 /* ---------------- REST ---------------- */
 
