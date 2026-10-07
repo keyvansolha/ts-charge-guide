@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TehranSpeaker Charge Guide
  * Description: راهنمای انتخاب پاوربانک و شارژر و مراقبت از باتری، بر پایه محصولات زنده ووکامرس و توکن‌های قالب.
- * Version: 0.6.1
+ * Version: 0.7.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Requires Plugins: woocommerce
@@ -20,7 +20,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'TS_CHARGE_GUIDE_VERSION', '0.6.1' );
+define( 'TS_CHARGE_GUIDE_VERSION', '0.7.0' );
 define( 'TS_CHARGE_GUIDE_FILE', __FILE__ );
 define( 'TS_CHARGE_GUIDE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'TS_CHARGE_GUIDE_URL', plugin_dir_url( __FILE__ ) );
