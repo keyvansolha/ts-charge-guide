@@ -1,0 +1,64 @@
+/* Theme-token bridge for the charge guide.
+ *
+ * The guide never redeclares the theme's semantic variables; it aliases them
+ * as --cg-* and supplies scoped fallbacks only for the case where the theme's
+ * token layer is unavailable. Theme runtime state stays owned by the theme
+ * (tsThemeMode / tsMode / body.dark / data-theme) — this file reads tokens,
+ * it does not decide the mode.
+ *
+ * The aliases consume whatever the theme defines on :root, so a theme change
+ * reaches the guide without an edit here. Fallback values mirror
+ * amazing-theme-system for the un-themed case. */
+
+.ts-charge {
+	--cg-brand-navy: var(--brand-navy, #002864);
+	--cg-theme-accent: var(--theme-accent, #b6e30c);
+	--cg-surface-page: var(--surface-page, #ffffff);
+	--cg-surface-card: var(--surface-card, #ffffff);
+	--cg-surface-raised: var(--surface-raised, #f7f9fa);
+	--cg-surface-subtle: var(--surface-subtle, #f0f3f5);
+	--cg-surface-control: var(--surface-control, #f3f6f8);
+	--cg-surface-control-hover: var(--surface-control-hover, #e9eef1);
+	--cg-surface-navigation: var(--surface-navigation, #002864);
+	--cg-text-strong: var(--text-strong, #102a43);
+	--cg-text-body: var(--text-body, #334e68);
+	--cg-text-muted: var(--text-muted, #5f7283);
+	--cg-text-on-brand: var(--text-on-brand, #f7fbff);
+	--cg-text-on-accent: var(--text-on-accent, #09213a);
+	--cg-border-subtle: var(--border-subtle, #dce3e8);
+	--cg-border-control: var(--border-control, #c8d3db);
+	--cg-content-link-color: var(--content-link-color, #315a7d);
+	--cg-focus-ring: var(--focus-ring, #6f8900);
+	--cg-state-success: var(--state-success, #21762a);
+	--cg-state-warning: var(--state-warning, #a85f00);
+	--cg-state-warning-surface: var(--state-warning-surface, #fff5e7);
+	--cg-shadow-soft: var(--shadow-soft, 0 14px 42px rgb(16 42 67 / 0.12));
+	--cg-theme-motion-duration: var(--theme-motion-duration, 320ms);
+	--cg-theme-motion-ease: var(--theme-motion-ease, cubic-bezier(0.2, 0.7, 0.3, 1));
+}
+
+/* A data-theme-only host still gets the correct scoped fallback. When the
+ * amazing runtime also adds body.dark, the theme-owned values win. */
+html[data-theme="dark"] .ts-charge,
+body[data-theme="dark"] .ts-charge,
+body.dark .ts-charge {
+	--cg-surface-page: var(--surface-page, #07121d);
+	--cg-surface-card: var(--surface-card, #0d1d29);
+	--cg-surface-raised: var(--surface-raised, #132634);
+	--cg-surface-subtle: var(--surface-subtle, #192d3c);
+	--cg-surface-control: var(--surface-control, #152c3b);
+	--cg-surface-control-hover: var(--surface-control-hover, #1b3748);
+	--cg-surface-navigation: var(--surface-navigation, #061f38);
+	--cg-text-strong: var(--text-strong, #edf4f7);
+	--cg-text-body: var(--text-body, #c8d4da);
+	--cg-text-muted: var(--text-muted, #92a4ae);
+	--cg-text-on-accent: var(--text-on-accent, #09213a);
+	--cg-border-subtle: var(--border-subtle, #29404f);
+	--cg-border-control: var(--border-control, #365265);
+	--cg-content-link-color: var(--content-link-color, #9dcce8);
+	--cg-focus-ring: var(--focus-ring, #b6e30c);
+	--cg-state-success: var(--state-success, #8dd697);
+	--cg-state-warning: var(--state-warning, #f2bd68);
+	--cg-state-warning-surface: var(--state-warning-surface, #3a2a16);
+	--cg-shadow-soft: var(--shadow-soft, 0 14px 42px rgb(0 0 0 / 0.32));
+}

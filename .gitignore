@@ -1,0 +1,10 @@
+# Test-only dependencies for the JS suite (jsdom). Never shipped.
+tests/js/node_modules/
+tests/js/package-lock.json
+
+# Editor and OS noise.
+.DS_Store
+*.swp
+
+# Generated preview pages (regenerate with tests/browser/preview.php).
+tests/browser/out/

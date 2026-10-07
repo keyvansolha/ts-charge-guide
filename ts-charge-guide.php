@@ -1,24 +1,80 @@
 <?php
 /**
  * Plugin Name: TehranSpeaker Charge Guide
- * Description: راهنمای تصویری پاوربانک و شارژر؛ شورت‌کد [ts_charge_guide]
- * Version: 0.3.0
+ * Description: راهنمای انتخاب پاوربانک و شارژر و مراقبت از باتری، بر پایه محصولات زنده ووکامرس و توکن‌های قالب.
+ * Version: 0.4.0
  * Requires at least: 6.0
- * Requires PHP: 7.4
- * Author: TehranSpeaker
+ * Requires PHP: 8.0
+ * Requires Plugins: woocommerce
+ * Text Domain: ts-charge-guide
+ * Author: Parsa Dana, Keyvan Havestin
+ *
+ * Plugin bootstrap and composition root.
+ *
+ * Only environment checks, class loading, service construction, and hook
+ * registration happen here. The guide copy lives in Content, the catalog in
+ * CatalogAdapter, and the markup in GuideView.
+ *
+ * @package TSChargeGuide
  */
-if (!defined('ABSPATH')) { exit; }
-function ts_charge_guide_enqueue_styles() {
- wp_enqueue_style('ts-charge-guide-embed',plugins_url('assets/embed.css',__FILE__),array(),'0.3.0');
+
+defined( 'ABSPATH' ) || exit;
+
+define( 'TS_CHARGE_GUIDE_VERSION', '0.4.0' );
+define( 'TS_CHARGE_GUIDE_FILE', __FILE__ );
+define( 'TS_CHARGE_GUIDE_DIR', plugin_dir_path( __FILE__ ) );
+define( 'TS_CHARGE_GUIDE_URL', plugin_dir_url( __FILE__ ) );
+define( 'TS_CHARGE_GUIDE_OPTION', 'ts_charge_guide_settings' );
+define( 'TS_CHARGE_GUIDE_REST_BASE', 'ts-charge/v1' );
+define( 'TS_CHARGE_GUIDE_CACHE_PREFIX', 'ts_charge_guide_catalog_' );
+define( 'TS_CHARGE_GUIDE_TRANSIENT_EXPIRY', 15 * MINUTE_IN_SECONDS );
+
+/**
+ * Minimal PSR-4 class autoloader for the TSChargeGuide namespace.
+ *
+ * @param string $class Fully qualified class name.
+ */
+function ts_charge_guide_autoload( string $class ): void {
+	if ( ! str_starts_with( $class, 'TSChargeGuide\\' ) ) {
+		return;
+	}
+	$relative = substr( $class, strlen( 'TSChargeGuide\\' ) );
+	$file     = __DIR__ . '/includes/src/' . str_replace( '\\', '/', $relative ) . '.php';
+	if ( is_file( $file ) ) {
+		require_once $file;
+	}
 }
-add_action('wp_enqueue_scripts','ts_charge_guide_enqueue_styles');
-function ts_charge_guide_render_shortcode() {
- ts_charge_guide_enqueue_styles();
- wp_enqueue_script('ts-charge-guide-native',plugins_url('assets/native.js',__FILE__),array(),'0.3.0',true);
- $base=trailingslashit(plugins_url('app',__FILE__));
- $fragment=file_get_contents(__DIR__.'/assets/fragment.html');
- if ($fragment===false) { return '<p>فایل راهنمای شارژ پیدا نشد.</p>'; }
- $fragment=str_replace(array('__BASE__','__NATIVE__'),array(esc_url($base),esc_url(plugins_url('assets/native.css',__FILE__).'?v=0.3.0')),$fragment);
- return '<div class="ts-charge-guide-native" data-base="'.esc_url($base).'"><template>'.$fragment.'</template><noscript>برای نمایش راهنمای تعاملی، جاوااسکریپت را فعال کنید.</noscript></div>';
+spl_autoload_register( 'ts_charge_guide_autoload' );
+
+register_activation_hook( __FILE__, static function (): void {
+	// Activation writes nothing: no pages, no products, no options row beyond
+	// defaults written on first read (get_option default path).
+	ts_charge_guide_environment_ready();
+} );
+
+/**
+ * Whether the runtime supports the plugin (PHP and WooCommerce presence).
+ *
+ * @return bool True when WooCommerce is active with a compatible runtime.
+ */
+function ts_charge_guide_environment_ready(): bool {
+	$php_ok = version_compare( PHP_VERSION, '8.0', '>=' );
+	$wc_ok  = class_exists( 'WooCommerce' ) || ( function_exists( 'is_plugin_active' ) && is_plugin_active( 'woocommerce/woocommerce.php' ) );
+	return $php_ok && $wc_ok;
 }
-add_shortcode('ts_charge_guide','ts_charge_guide_render_shortcode');
+
+/**
+ * Compose and register services.
+ *
+ * @return TSChargeGuide\App The application container.
+ */
+function ts_charge_guide(): TSChargeGuide\App {
+	static $app = null;
+	if ( null === $app ) {
+		$app = new TSChargeGuide\App();
+		$app->register();
+	}
+	return $app;
+}
+
+add_action( 'plugins_loaded', 'ts_charge_guide', 5 );
