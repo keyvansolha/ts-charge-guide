@@ -124,6 +124,7 @@ final class LandingPage {
 			'endpoint'    => function_exists( 'rest_url' ) ? rest_url( TS_CHARGE_GUIDE_REST_BASE . '/recommend' ) : '',
 			'nonce'       => function_exists( 'wp_create_nonce' ) ? wp_create_nonce( 'wp_rest' ) : '',
 			'hasProducts' => [] !== $catalog,
+			'blogIds'     => $this->settings->blog_ids(),
 			'error'       => 'الان نتوانستیم نتیجه را بگیریم. یک بار دیگر امتحان کن؛ انتخاب‌هایت باقی می‌ماند.',
 		];
 

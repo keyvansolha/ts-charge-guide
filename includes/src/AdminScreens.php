@@ -74,6 +74,7 @@ final class AdminScreens {
 		$page_id  = (int) ( $stored['page_id'] ?? 0 );
 		$terms    = $this->settings->category_terms();
 		$cards    = $this->settings->cards_per_kind();
+		$blog_ids = $this->settings->blog_ids();
 		$broken   = $this->settings->has_broken_page();
 		$woo      = $this->catalog->woo_available();
 		$scoped   = $this->settings->has_product_scope();
@@ -135,6 +136,13 @@ final class AdminScreens {
 					<p class="description">سقف تعداد کارت هر دسته‌بندی (۱ تا <?php echo (int) Settings::MAX_CARDS; ?>)؛ برای کندی سایت عدد را کم کن.</p>
 				</td>
 			</tr>
+			<tr>
+				<th scope="row"><label for="ts-charge-blog-ids">نوشته‌های مجله</label></th>
+				<td>
+					<textarea id="ts-charge-blog-ids" name="<?php echo esc_attr( TS_CHARGE_GUIDE_OPTION ); ?>[blog_ids]" rows="3" class="large-text code" placeholder="288405, 292114"><?php echo esc_textarea( implode( ', ', $blog_ids ) ); ?></textarea>
+					<p class="description">شناسهٔ نوشته‌هایی که زیر بخش باتری به‌شکل کارت مجله (کارت خودِ قالب) نمایش داده می‌شوند — با کاما یا در خط تازه، حداکثر <?php echo (int) Settings::MAX_BLOG_IDS; ?> مورد و به همین ترتیب. خالی بگذاری، آن بخش اصلاً رندر نمی‌شود.</p>
+				</td>
+			</tr>
 		</table>
 		<?php submit_button( 'ذخیره تنظیمات' ); ?>
 	</form>
@@ -148,8 +156,51 @@ final class AdminScreens {
 		</tbody>
 	</table>
 	<p><a class="button" href="<?php echo esc_url( $flush_url ); ?>">پاک کردن کش محصولات راهنما</a></p>
-	<?php $this->catalog_preview(); ?>
+	<?php
+	$this->catalog_preview();
+	$this->reading_preview();
+	?>
 </div>
+		<?php
+	}
+
+	/**
+	 * Read-only preview of the magazine cards the settings would render now.
+	 *
+	 * A listed ID that no longer resolves is called out here rather than
+	 * silently missing from the page.
+	 */
+	private function reading_preview(): void {
+		$ids = $this->settings->blog_ids();
+		?>
+	<h2>بخش مجله</h2>
+		<?php if ( ! $ids ) : ?>
+		<p class="description">هیچ نوشته‌ای انتخاب نشده؛ بخش مجلهٔ راهنما رندر نمی‌شود.</p>
+			<?php
+			return;
+		endif;
+		?>
+	<table class="widefat striped">
+		<thead><tr><th>شناسه</th><th>نوشته</th><th>نوع</th><th>تصویر شاخص</th><th>ویرایش</th></tr></thead>
+		<tbody>
+		<?php foreach ( $ids as $id ) : ?>
+			<?php
+			$post   = function_exists( 'get_post' ) ? get_post( (int) $id ) : null;
+			$type   = is_object( $post ) && isset( $post->post_type ) ? (string) $post->post_type : '';
+			$status = is_object( $post ) && isset( $post->post_status ) ? (string) $post->post_status : 'publish';
+			$ok     = is_object( $post ) && in_array( $type, [ 'post', 'page' ], true ) && 'publish' === $status;
+			?>
+			<tr>
+				<td><code><?php echo (int) $id; ?></code></td>
+				<td><?php echo $ok ? esc_html( get_the_title( (int) $id ) ) : '<em>یافت نشد</em>'; ?></td>
+				<td><?php echo $ok ? esc_html( $type ) : '—'; ?></td>
+				<td><?php echo $ok && function_exists( 'has_post_thumbnail' ) && has_post_thumbnail( (int) $id ) ? 'دارد' : 'ندارد'; ?></td>
+				<td><?php echo $ok && function_exists( 'get_edit_post_link' ) ? '<a href="' . esc_url( (string) get_edit_post_link( (int) $id ) ) . '">ویرایش</a>' : '—'; ?></td>
+			</tr>
+		<?php endforeach; ?>
+		</tbody>
+	</table>
+	<p class="description">هر شناسه‌ای که «یافت نشد» است یا منتشر نشده، در صفحه نمایش داده نمی‌شود.</p>
 		<?php
 	}
 

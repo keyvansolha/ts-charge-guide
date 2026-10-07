@@ -268,7 +268,6 @@
 .cg-reading-heading h3 { font-size: 28px; }
 .cg-reading-heading > p { font-size: 14px; color: var(--cg-text-muted); }
 .cg-reading { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
-.cg-reading-link { font-size: 17px; color: var(--cg-content-link-color); text-decoration: underline; text-underline-offset: 5px; }
 
 /* ---------------- troubleshooting ---------------- */
 

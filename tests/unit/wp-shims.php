@@ -178,6 +178,11 @@ function wp_nonce_url( string $url, string $action = '' ): string {
 	return $url . '&_wpnonce=test-nonce';
 }
 
+/** Escaped textarea content (core escapes it like text). */
+function esc_textarea( $text ): string {
+	return esc_html( $text );
+}
+
 /** Nonce factory. */
 function wp_create_nonce( string $action = '' ): string {
 	return 'test-nonce';
@@ -238,9 +243,11 @@ function get_post( $id ) {
 	$id = (int) $id;
 	// Fake posts registered by the theme-side fixtures (blog cards read them).
 	if ( isset( $GLOBALS['ts_cg_posts'][ $id ] ) ) {
-		$post             = new stdClass();
-		$post->ID         = $id;
-		$post->post_title = (string) ( $GLOBALS['ts_cg_posts'][ $id ]['title'] ?? '' );
+		$post              = new stdClass();
+		$post->ID          = $id;
+		$post->post_title  = (string) ( $GLOBALS['ts_cg_posts'][ $id ]['title'] ?? '' );
+		$post->post_type   = (string) ( $GLOBALS['ts_cg_posts'][ $id ]['post_type'] ?? 'post' );
+		$post->post_status = (string) ( $GLOBALS['ts_cg_posts'][ $id ]['post_status'] ?? 'publish' );
 		return $post;
 	}
 	if ( $id === (int) ( $GLOBALS['ts_cg_queried_page'] ?? 0 ) || isset( $GLOBALS['ts_cg_pages'][ $id ] ) ) {

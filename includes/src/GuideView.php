@@ -58,7 +58,11 @@ final class GuideView {
 	 * @return string Escaped HTML.
 	 */
 	public function render(): string {
-		$json = wp_json_encode( $this->config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
+		// Only what the browser needs: the magazine ids are server-side input and
+		// have no business in the page.
+		$browser_config = $this->config;
+		unset( $browser_config['blogIds'] );
+		$json = wp_json_encode( $browser_config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
 		$json = false === $json ? '{}' : $json;
 
 		ob_start();
@@ -278,29 +282,25 @@ final class GuideView {
 			<p>قرار نیست تمام روز مراقب عدد درصد باشی. از تنظیمات خود گوشی کمک بگیر و شارژ موردنیاز روزت را در نظر بگیر؛ فرسودگی باتری هم بخشی طبیعی از عمر آن است.</p>
 		</div>
 
+		<?php $reading = $this->reading_posts(); ?>
+		<?php if ( $reading ) : ?>
 		<div class="cg-reading-heading">
 			<div><span class="cg-eyebrow">از مجله تهران اسپیکر</span><h3>اگر دوست داری بیشتر بدانی.</h3></div>
-			<p>سه مطلب مرتبط برای ادامه مطالعه</p>
+			<p>چند مطلب مرتبط برای ادامه مطالعه</p>
 		</div>
 		<div class="cg-reading">
 			<?php
-			foreach ( Content::reading() as $item ) :
-				$blog_card = $this->blog_card_file();
-				$post_id   = '' === $blog_card ? 0 : $this->reading_post_id( (string) $item['path'] );
-				$post      = $post_id > 0 && function_exists( 'get_post' ) ? get_post( $post_id ) : null;
-				if ( $post ) :
-					// The theme's own post card: it reads the post through the
-					// loop (title, permalink, excerpt, thumbnail, date).
-					setup_postdata( $post );
-					$blogCardHeadingLevel = 3;
-					require $blog_card;
-					wp_reset_postdata();
-					continue;
-				endif;
-				?>
-				<a class="cg-reading-link" href="<?php echo esc_url( home_url( (string) $item['path'] ) ); ?>"><?php echo esc_html( (string) $item['title'] ); ?></a>
-			<?php endforeach; ?>
+			foreach ( $reading as $reading_post ) :
+				// The theme's own post card: it reads the post through the loop
+				// (title, permalink, excerpt, thumbnail, date).
+				setup_postdata( $reading_post );
+				$blogCardHeadingLevel = 3;
+				require $this->blog_card_file();
+				wp_reset_postdata();
+			endforeach;
+			?>
 		</div>
+		<?php endif; ?>
 	</section>
 		<?php
 		return (string) ob_get_clean();
@@ -520,33 +520,34 @@ final class GuideView {
 	}
 
 	/**
-	 * The post a reading item points at, 0 when the path is not that post.
+	 * The magazine posts the owner listed in the settings, in their order.
 	 *
-	 * `url_to_postid()` can answer with a different document than the one asked
-	 * for — observed on the live site, where the article's path resolved to the
-	 * page rendering the guide, so the first card showed the guide itself. The
-	 * resolved post therefore has to prove it is the requested path, and the
-	 * page currently being rendered is never accepted; anything else falls back
-	 * to the plain link, which cannot point at the wrong article.
+	 * The IDs are store data, so they come from the option the owner edits — no
+	 * post is named in the source, and an empty list means the section is not
+	 * rendered at all. An ID that no longer resolves to a published post is
+	 * skipped here and reported on the settings screen, so a page never shows a
+	 * card for something that is gone or is not public yet.
 	 *
-	 * @param string $path Site-relative path.
-	 * @return int
+	 * @return array<int, object> Post objects.
 	 */
-	private function reading_post_id( string $path ): int {
-		if ( ! function_exists( 'url_to_postid' ) || ! function_exists( 'home_url' ) || ! function_exists( 'get_permalink' ) ) {
-			return 0;
+	private function reading_posts(): array {
+		if ( '' === $this->blog_card_file() || ! function_exists( 'get_post' ) ) {
+			return [];
 		}
-		$id = (int) url_to_postid( home_url( $path ) );
-		if ( $id < 1 ) {
-			return 0;
+		$posts = [];
+		foreach ( (array) ( $this->config['blogIds'] ?? [] ) as $id ) {
+			$post = get_post( (int) $id );
+			if ( ! is_object( $post ) ) {
+				continue;
+			}
+			$type   = isset( $post->post_type ) ? (string) $post->post_type : 'post';
+			$status = isset( $post->post_status ) ? (string) $post->post_status : 'publish';
+			if ( ! in_array( $type, [ 'post', 'page' ], true ) || 'publish' !== $status ) {
+				continue;
+			}
+			$posts[] = $post;
 		}
-		if ( function_exists( 'get_queried_object_id' ) && $id === (int) get_queried_object_id() ) {
-			return 0;
-		}
-		$path_of = static function ( string $url ): string {
-			return function_exists( 'untrailingslashit' ) ? untrailingslashit( (string) wp_parse_url( $url, PHP_URL_PATH ) ) : rtrim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
-		};
-		return $path_of( home_url( $path ) ) === $path_of( (string) get_permalink( $id ) ) ? $id : 0;
+		return $posts;
 	}
 
 	/**

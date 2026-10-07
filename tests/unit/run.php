@@ -77,6 +77,14 @@ function plugin_version(): string {
 ts_cg_reset();
 $settings = new Settings();
 check( 'default card bound is 6', 6 === $settings->cards_per_kind() );
+check( 'the magazine list is empty until the owner lists posts', [] === $settings->blog_ids() );
+
+/* The magazine list: whatever the owner pastes becomes safe ids. */
+check( 'the magazine list accepts Persian digits, commas and newlines', [ 288405, 292114 ] === $settings->normalize_ids( "۲۸۸۴۰۵، 292114\n292114" ) );
+check( 'the magazine list drops anything that is not a number', [ 12 ] === $settings->normalize_ids( 'abc 12 def' ) );
+check( 'the magazine list keeps the owner’s order', [ 30, 10, 20 ] === $settings->normalize_ids( [ 30, 10, 20 ] ) );
+check( 'the magazine list is capped', Settings::MAX_BLOG_IDS === count( $settings->normalize_ids( '1 2 3 4 5 6 7 8 9' ) ) );
+check( 'an empty magazine field means an empty list', [] === $settings->normalize_ids( '' ) && [] === $settings->normalize_ids( null ) && [] === $settings->normalize_ids( '   ' ) );
 check( 'nothing is classified before the owner assigns categories', ! $settings->has_product_scope() );
 check( 'both category terms default to 0', [ 0, 0 ] === array_values( $settings->category_terms() ) );
 check( 'no landing page by default', 0 === $settings->landing_page_id() );
@@ -202,7 +210,7 @@ check( 'the guide renders with exactly one h1', 1 === preg_match_all( '/<h1\b/',
 check( 'the guide keeps the site chrome out', ! str_contains( $html, '<nav' ) && ! str_contains( $html, 'class="footer"' ) );
 check( 'the guide ships no font and no frame', ! str_contains( $html, '@font-face' ) && ! str_contains( $html, '<iframe' ) && ! str_contains( $html, 'YekanBakh.woff2' ) );
 check( 'the bootstrap config is JSON-hex encoded', str_contains( $html, 'id="ts-charge-config"' ) && ! str_contains( $html, '</script><script' ) );
-check( 'catalog-links are site-relative', str_contains( $html, 'https://store.example/what-is-a-battery-charge-cycle/' ) );
+check( 'the landing page passes the magazine ids from the settings, not from the source', str_contains( src( 'includes/src/LandingPage.php' ), "'blogIds'" ) && str_contains( src( 'includes/src/LandingPage.php' ), 'blog_ids()' ) );
 
 $danger = [
 	[
@@ -275,6 +283,7 @@ foreach ( $sources as $file ) {
 	$joined .= src( $file );
 }
 check( 'no product name is written into the source', ! preg_match( '/Bipow|Blade H1|Enerfill|Cube Pro|Palm 20W|Power Combo/i', $joined ) );
+check( 'no magazine article is named in the source', ! preg_match( '#what-is-a-battery-charge-cycle|pd-qc-pps-charger-guide|built-in-cable-power-bank-guide#', $joined ) && ! str_contains( src( 'includes/src/Content.php' ), 'reading(' ) && ! str_contains( src( 'includes/src/GuideView.php' ), 'url_to_postid' ) );
 check( 'no store URL or upload path is written into the source', ! str_contains( $joined, 'tehranspeaker.com' ) );
 check( 'no product id table survives', ! str_contains( $joined, 'CHARGE_PRODUCTS' ) && ! str_contains( $joined, 'bankIds' ) );
 check( 'the source decides nothing by device sniffing', ! str_contains( $joined, 'matchMedia' ) && ! str_contains( $joined, 'document.referrer' ) );
@@ -296,19 +305,31 @@ ts_cg_term( 500, 'پاوربانک', 'powerbank', 6 );
 ts_cg_term( 501, 'شارژر', 'charger', 6 );
 ts_cg_product( 901, [ 'name' => 'پاوربانک الف', 'cats' => [ 'powerbank' ], 'price' => 900000.0 ] );
 ts_cg_product( 904, [ 'name' => 'شارژر الف', 'cats' => [ 'charger' ], 'price' => 300000.0 ] );
-ts_cg_post( 7001, [ 'path' => '/what-is-a-battery-charge-cycle/', 'title' => 'سیکل شارژ باتری', 'excerpt' => 'درباره چرخه شارژ.', 'permalink' => '/what-is-a-battery-charge-cycle/', 'thumb' => '/img/7001.webp' ] );
-update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 6 ] );
+ts_cg_post( 7001, [ 'title' => 'سیکل شارژ باتری', 'excerpt' => 'درباره چرخه شارژ.', 'permalink' => '/what-is-a-battery-charge-cycle/', 'thumb' => '/img/7001.webp' ] );
+update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 6, 'blog_ids' => [ 7001, 999999 ] ] );
 
 $app   = plugin();
-$guide = ( new GuideView( [ 'endpoint' => 'https://store.example/wp-json/ts-charge/v1/recommend', 'nonce' => 'n', 'hasProducts' => true, 'error' => 'x' ], $app->catalog->products() ) )->render();
+$guide = ( new GuideView( [ 'endpoint' => 'https://store.example/wp-json/ts-charge/v1/recommend', 'nonce' => 'n', 'hasProducts' => true, 'blogIds' => $app->settings->blog_ids(), 'error' => 'x' ], $app->catalog->products() ) )->render();
 
 check( 'the grid renders the theme card component', 2 === substr_count( $guide, 'class="product-simple-card"' ) );
 check( 'the grid wraps each card in a kind cell, not in a guide card', 2 === substr_count( $guide, 'class="cg-cell"' ) && ! str_contains( $guide, 'cg-card' ) );
 check( 'the card is rendered from the theme partial, by device', str_contains( src( 'includes/src/GuideView.php' ), 'THEME_COMPONENTS' ) && str_contains( src( 'includes/src/GuideView.php' ), "'product-cards/simple-card-mobile.php'" ) );
 check( 'the guide renders no product card markup of its own', ! str_contains( src( 'includes/src/GuideView.php' ), 'cg-card' ) && ! str_contains( src( 'assets/style.css' ), '.cg-card' ) );
-check( 'a real reading path renders the theme post card', str_contains( $guide, 'class="blog-row-post-card full-card shadow-bottom' ) && str_contains( $guide, 'سیکل شارژ باتری' ) );
-check( 'a reading path that is not a post falls back to a plain link', str_contains( $guide, 'class="cg-reading-link"' ) );
+check( 'the magazine section renders the theme post card for each configured id', 1 === substr_count( $guide, 'class="blog-row-post-card full-card shadow-bottom' ) && str_contains( $guide, 'سیکل شارژ باتری' ) );
+check( 'a configured id that does not resolve is skipped, never rendered', 1 === substr_count( $guide, 'class="blog-row-post-card' ) && ! str_contains( $guide, '999999' ) );
 check( 'the guide asks the theme for the card stylesheet and its script', str_contains( src( 'includes/src/Assets.php' ), "'amazing-product-card'" ) && str_contains( src( 'includes/src/Assets.php' ), "'wbsFavorite'" ) );
+
+/* Absence-shaped proof: no post configured, no magazine section at all. */
+update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 6, 'blog_ids' => '' ] );
+$bare = ( new GuideView( [ 'endpoint' => 'e', 'nonce' => 'n', 'hasProducts' => true, 'error' => 'x' ], plugin()->catalog->products() ) )->render();
+check( 'with no magazine post configured the section is not rendered', ! str_contains( $bare, 'blog-row-post-card' ) && ! str_contains( $bare, 'cg-reading' ) && ! str_contains( $bare, 'بیشتر بدانی' ) );
+
+/* The settings screen shows what the magazine list resolves to. */
+update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 6, 'blog_ids' => [ 7001, 999999 ] ] );
+ob_start();
+plugin()->admin->render_page();
+$admin = (string) ob_get_clean();
+check( 'the settings screen previews the magazine posts and flags a missing id', str_contains( $admin, 'بخش مجله' ) && str_contains( $admin, 'یافت نشد' ) && str_contains( $admin, 'سیکل شارژ باتری' ) );
 
 // Put the guide on a page, so the asset service considers this a guide request.
 $GLOBALS['ts_cg_pages']              = [ 12 => 'راهنمای شارژ' ];

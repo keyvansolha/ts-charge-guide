@@ -31,19 +31,19 @@ ts_cg_product( 904, [ 'name' => 'شارژر دیواری بیسوس مدل Cube 
 ts_cg_product( 905, [ 'name' => 'شارژر دیواری بیسوس مدل EnerFill FE11 33W', 'cats' => [ 'charger' ], 'price' => 1400000.0 ] );
 $GLOBALS['ts_cg_brands'] = [ 901 => 'Baseus', 902 => 'Baseus', 903 => 'Baseus', 904 => 'Baseus', 905 => 'Baseus' ];
 
-// The three magazine articles are real posts on the site; the theme's blog card
-// renders them, so the preview registers them the same way.
-ts_cg_post( 7001, [ 'path' => '/what-is-a-battery-charge-cycle/', 'title' => 'سیکل شارژ باتری چیست و چگونه محاسبه می‌شود؟', 'excerpt' => 'برای آشنایی با مفهوم چرخه و تفاوت آن با دفعات اتصال به شارژر، و اینکه چرا عدد چرخه تنها معیار عمر باتری نیست.', 'permalink' => '/what-is-a-battery-charge-cycle/', 'thumb' => 'https://store.example/img/901.webp' ] );
-ts_cg_post( 7002, [ 'path' => '/pd-qc-pps-charger-guide/', 'title' => 'تفاوت PD و QC و PPS، راهنمای انتخاب شارژر', 'excerpt' => 'چرا وات بیشتر به‌تنهایی کافی نیست و گوشی، شارژر و کابل باید هماهنگ باشند؟', 'permalink' => '/pd-qc-pps-charger-guide/', 'thumb' => 'https://store.example/img/902.webp' ] );
-ts_cg_post( 7003, [ 'path' => '/built-in-cable-power-bank-guide-mehr-1405/', 'title' => 'راهنمای خرید پاوربانک با کابل داخلی و کابل جدا', 'excerpt' => 'تفاوت راحتی حمل، امکان تعویض کابل و سازگاری با درگاه دستگاهت.', 'permalink' => '/built-in-cable-power-bank-guide-mehr-1405/', 'thumb' => 'https://store.example/img/901.webp' ] );
+// The magazine posts are whatever the owner listed by ID in the settings.
+ts_cg_post( 7001, [ 'title' => 'سیکل شارژ باتری چیست و چگونه محاسبه می‌شود؟', 'excerpt' => 'برای آشنایی با مفهوم چرخه و تفاوت آن با دفعات اتصال به شارژر، و اینکه چرا عدد چرخه تنها معیار عمر باتری نیست.', 'permalink' => '/what-is-a-battery-charge-cycle/', 'thumb' => 'https://store.example/img/901.webp' ] );
+ts_cg_post( 7002, [ 'title' => 'تفاوت PD و QC و PPS، راهنمای انتخاب شارژر', 'excerpt' => 'چرا وات بیشتر به‌تنهایی کافی نیست و گوشی، شارژر و کابل باید هماهنگ باشند؟', 'permalink' => '/pd-qc-pps-charger-guide/', 'thumb' => 'https://store.example/img/902.webp' ] );
+ts_cg_post( 7003, [ 'title' => 'راهنمای خرید پاوربانک با کابل داخلی و کابل جدا', 'excerpt' => 'تفاوت راحتی حمل، امکان تعویض کابل و سازگاری با درگاه دستگاهت.', 'permalink' => '/built-in-cable-power-bank-guide-mehr-1405/', 'thumb' => 'https://store.example/img/901.webp' ] );
 
-update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 4 ] );
+update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 4, 'blog_ids' => [ 7001, 7002, 7003 ] ] );
 
 $catalog = ( new TSChargeGuide\CatalogAdapter( new TSChargeGuide\Settings() ) )->products();
 $config  = [
 	'endpoint'    => 'https://store.example/wp-json/ts-charge/v1/recommend',
 	'nonce'       => 'preview',
 	'hasProducts' => true,
+	'blogIds'     => [ 7001, 7002, 7003 ],
 	'error'       => 'الان نتوانستیم نتیجه را بگیریم. یک بار دیگر امتحان کن؛ انتخاب‌هایت باقی می‌ماند.',
 ];
 $markup = ( new TSChargeGuide\GuideView( $config, $catalog ) )->render();

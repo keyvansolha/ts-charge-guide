@@ -33,13 +33,19 @@ ts_cg_product( 902, [ 'name' => 'پاوربانک بیسوس مدل B 10000 (ن�
 ts_cg_product( 903, [ 'name' => 'پاوربانک بیسوس مدل C 30000', 'cats' => [ 'powerbank' ], 'price' => 3900000.0 ] );
 ts_cg_product( 904, [ 'name' => 'شارژر دیواری 65W', 'cats' => [ 'charger' ], 'price' => 2400000.0 ] );
 ts_cg_product( 999, [ 'name' => 'شارژر <script>alert(1)</script>', 'cats' => [ 'charger' ], 'price' => 100000.0 ] );
-update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 4 ] );
+// The magazine posts are configured by ID, exactly as the settings screen takes
+// them. Only two are listed here, one of them on purpose unresolvable, so the
+// suite covers both the card and the "id that no longer exists" case.
+ts_cg_post( 7001, [ 'title' => 'سیکل شارژ باتری چیست و چگونه محاسبه می‌شود؟', 'excerpt' => 'برای آشنایی با مفهوم چرخه و تفاوت آن با دفعات اتصال به شارژر.', 'permalink' => '/what-is-a-battery-charge-cycle/', 'thumb' => '/img/7001.webp' ] );
+ts_cg_post( 7002, [ 'title' => 'تفاوت PD و QC و PPS، راهنمای انتخاب شارژر', 'excerpt' => 'چرا وات بیشتر به‌تنهایی کافی نیست؟', 'permalink' => '/pd-qc-pps-charger-guide/', 'thumb' => '/img/7002.webp' ] );
+update_option( 'ts_charge_guide_settings', [ 'powerbank_term' => 500, 'charger_term' => 501, 'cards_per_kind' => 4, 'blog_ids' => [ 7001, 7002 ] ] );
 
 $catalog = ( new TSChargeGuide\CatalogAdapter( new TSChargeGuide\Settings() ) )->products();
 $config  = [
 	'endpoint'    => 'https://store.example/wp-json/ts-charge/v1/recommend',
 	'nonce'       => 'fixture-nonce',
 	'hasProducts' => true,
+	'blogIds'     => ( new TSChargeGuide\Settings() )->blog_ids(),
 	'error'       => 'الان نتوانستیم نتیجه را بگیریم. یک بار دیگر امتحان کن؛ انتخاب‌هایت باقی می‌ماند.',
 ];
 $view = new TSChargeGuide\GuideView( $config, $catalog );

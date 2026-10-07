@@ -446,42 +446,6 @@ final class Content {
 	}
 
 	/**
-	 * The three magazine articles shown under the battery section.
-	 *
-	 * Paths are site-relative on purpose.
-	 *
-	 * @return array<int, array{path:string,topic:string,title:string,summary:string,image:string,alt:string}>
-	 */
-	public static function reading(): array {
-		return [
-			[
-				'path'    => '/what-is-a-battery-charge-cycle/',
-				'topic'   => 'شناخت باتری',
-				'title'   => 'سیکل شارژ باتری چیست و چگونه محاسبه می‌شود؟',
-				'summary' => 'برای آشنایی با مفهوم چرخه و تفاوت آن با دفعات اتصال به شارژر.',
-				'image'   => 'article-cycle.webp',
-				'alt'     => 'تصویر مفهومی چرخه‌های مصرف و شارژ باتری از مقاله تهران اسپیکر',
-			],
-			[
-				'path'    => '/pd-qc-pps-charger-guide/',
-				'topic'   => 'انتخاب شارژر سازگار',
-				'title'   => 'تفاوت PD و QC و PPS، راهنمای انتخاب شارژر',
-				'summary' => 'چرا وات بیشتر به‌تنهایی کافی نیست و گوشی، شارژر و کابل باید هماهنگ باشند؟',
-				'image'   => 'life-home.webp',
-				'alt'     => 'شارژر بیسوس در کنار گوشی و ساعت، از راهنمای انتخاب شارژر تهران اسپیکر',
-			],
-			[
-				'path'    => '/built-in-cable-power-bank-guide-mehr-1405/',
-				'topic'   => 'انتخاب و نگهداری کابل',
-				'title'   => 'راهنمای خرید پاوربانک با کابل داخلی و کابل جدا',
-				'summary' => 'تفاوت راحتی حمل، امکان تعویض کابل و سازگاری با درگاه دستگاهت.',
-				'image'   => 'article-cable.webp',
-				'alt'     => 'پاوربانک بیسوس در دست، از راهنمای کابل داخلی و جدا تهران اسپیکر',
-			],
-		];
-	}
-
-	/**
 	 * The illustration used by the hero.
 	 *
 	 * @return array{file:string,alt:string,width:int,height:int}
