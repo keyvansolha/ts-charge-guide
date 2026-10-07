@@ -56,13 +56,75 @@ function ts_cg_the_post(): ?array {
 
 /** Make a post current, the way setup_postdata() does. */
 function setup_postdata( $post ): bool {
-	$GLOBALS['ts_cg_current'] = is_object( $post ) ? (int) $post->ID : (int) $post;
+	$object = is_object( $post ) ? $post : get_post( $post );
+	if ( ! is_object( $object ) ) {
+		return false;
+	}
+	$GLOBALS['post']          = $object;
+	$GLOBALS['ts_cg_current'] = (int) $object->ID;
 	return true;
 }
 
 /** Put the previous post back. */
 function wp_reset_postdata(): void {
+	$GLOBALS['post']          = null;
 	$GLOBALS['ts_cg_current'] = 0;
+}
+
+/**
+ * Minimal WP_Query: the magazine loop needs have_posts()/the_post() and the
+ * post__in / post_type / post_status arguments the plugin passes.
+ */
+class WP_Query {
+
+	/** @var array<int, object> Matched posts, in the requested order. */
+	public array $posts = [];
+
+	/** @var int Number of matched posts. */
+	public int $post_count = 0;
+
+	/** @var int Loop cursor. */
+	private int $index = -1;
+
+	/**
+	 * Resolve the fake store the way core resolves post__in.
+	 *
+	 * @param array<string, mixed> $args Query args.
+	 */
+	public function __construct( array $args = [] ) {
+		$ids      = array_map( 'intval', (array) ( $args['post__in'] ?? [] ) );
+		$types    = (array) ( $args['post_type'] ?? [ 'post' ] );
+		$statuses = (array) ( $args['post_status'] ?? [ 'publish' ] );
+		foreach ( $ids as $id ) {
+			$fake = $GLOBALS['ts_cg_posts'][ $id ] ?? null;
+			if ( ! $fake ) {
+				continue;
+			}
+			if ( ! in_array( (string) ( $fake['post_type'] ?? 'post' ), $types, true ) ) {
+				continue;
+			}
+			if ( ! in_array( (string) ( $fake['post_status'] ?? 'publish' ), $statuses, true ) ) {
+				continue;
+			}
+			$this->posts[] = get_post( $id );
+		}
+		$this->post_count = count( $this->posts );
+	}
+
+	/** More posts left? */
+	public function have_posts(): bool {
+		return $this->index + 1 < $this->post_count;
+	}
+
+	/** Advance the loop and make the post current, exactly like core. */
+	public function the_post(): void {
+		$this->index++;
+		if ( ! isset( $this->posts[ $this->index ] ) ) {
+			return;
+		}
+		$GLOBALS['post']          = $this->posts[ $this->index ];
+		$GLOBALS['ts_cg_current'] = (int) $this->posts[ $this->index ]->ID;
+	}
 }
 
 /** Post object with the fields the harness uses. (See wp-shims for get_post.) */
@@ -96,13 +158,15 @@ function wp_parse_url( $url, $component = -1 ) {
 
 /** Current post id in the loop. */
 function get_the_ID() {
-	return (int) $GLOBALS['ts_cg_current'];
+	return isset( $GLOBALS['post'] ) && is_object( $GLOBALS['post'] ) ? (int) $GLOBALS['post']->ID : (int) $GLOBALS['ts_cg_current'];
 }
 
 /** Permalink of a post. */
 function get_the_permalink( $id = 0 ) {
-	$post = (int) $id ? get_post( $id ) : null;
-	$key  = $post ? (int) $post->ID : (int) $GLOBALS['ts_cg_current'];
+	$key = (int) $id;
+	if ( $key < 1 ) {
+		$key = get_the_ID();
+	}
 	return (string) ( $GLOBALS['ts_cg_posts'][ $key ]['permalink'] ?? '' );
 }
 
@@ -113,18 +177,18 @@ function the_permalink(): void {
 
 /** Echo the title, as the blog card does. */
 function the_title(): void {
-	echo esc_html( get_the_title( (int) $GLOBALS['ts_cg_current'] ) );
+	echo esc_html( get_the_title( get_the_ID() ) );
 }
 
 /** Post excerpt. */
 function get_the_excerpt( $post = null ) {
-	$key = (int) $GLOBALS['ts_cg_current'];
+	$key = get_the_ID();
 	return (string) ( $GLOBALS['ts_cg_posts'][ $key ]['excerpt'] ?? '' );
 }
 
 /** Featured image markup. */
 function the_post_thumbnail( $size = 'post-thumbnail', $attr = [] ): void {
-	$key = (int) $GLOBALS['ts_cg_current'];
+	$key = get_the_ID();
 	$src = (string) ( $GLOBALS['ts_cg_posts'][ $key ]['thumb'] ?? '' );
 	if ( '' !== $src ) {
 		echo '<img src="' . esc_url( $src ) . '" alt="" width="300" height="200">';

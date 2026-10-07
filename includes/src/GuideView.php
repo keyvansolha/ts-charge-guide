@@ -282,7 +282,7 @@ final class GuideView {
 			<p>قرار نیست تمام روز مراقب عدد درصد باشی. از تنظیمات خود گوشی کمک بگیر و شارژ موردنیاز روزت را در نظر بگیر؛ فرسودگی باتری هم بخشی طبیعی از عمر آن است.</p>
 		</div>
 
-		<?php $reading = $this->reading_posts(); ?>
+		<?php $reading = $this->reading_query(); ?>
 		<?php if ( $reading ) : ?>
 		<div class="cg-reading-heading">
 			<div><span class="cg-eyebrow">از مجله تهران اسپیکر</span><h3>اگر دوست داری بیشتر بدانی.</h3></div>
@@ -290,14 +290,16 @@ final class GuideView {
 		</div>
 		<div class="cg-reading">
 			<?php
-			foreach ( $reading as $reading_post ) :
-				// The theme's own post card: it reads the post through the loop
-				// (title, permalink, excerpt, thumbnail, date).
-				setup_postdata( $reading_post );
+			// A real loop, exactly how the theme's own blog pages run this card.
+			// `setup_postdata()` alone leaves in_the_loop() false and the card came
+			// out rendered for the guide page instead of the article; the_query /
+			// the_post() is the context the partial is written against.
+			while ( $reading->have_posts() ) :
+				$reading->the_post();
 				$blogCardHeadingLevel = 3;
 				require $this->blog_card_file();
-				wp_reset_postdata();
-			endforeach;
+			endwhile;
+			wp_reset_postdata();
 			?>
 		</div>
 		<?php endif; ?>
@@ -520,34 +522,38 @@ final class GuideView {
 	}
 
 	/**
-	 * The magazine posts the owner listed in the settings, in their order.
+	 * The magazine posts the owner listed in the settings, as a real loop.
 	 *
 	 * The IDs are store data, so they come from the option the owner edits — no
 	 * post is named in the source, and an empty list means the section is not
-	 * rendered at all. An ID that no longer resolves to a published post is
-	 * skipped here and reported on the settings screen, so a page never shows a
-	 * card for something that is gone or is not public yet.
+	 * rendered at all. The query is ordered by the owner's list and publishes
+	 * nothing that is not a published post or page, so a deleted or drafted
+	 * article cannot reach the page.
 	 *
-	 * @return array<int, object> Post objects.
+	 * Why a query rather than setup_postdata(): the theme's card is written for
+	 * a loop (have_posts()/the_post()). Rendered outside one it answered with
+	 * the document being viewed — on the live page every magazine card showed
+	 * the guide page itself. The loop is the context the partial expects.
+	 *
+	 * @return \WP_Query|null Loop, or null when there is nothing to show.
 	 */
-	private function reading_posts(): array {
-		if ( '' === $this->blog_card_file() || ! function_exists( 'get_post' ) ) {
-			return [];
+	private function reading_query(): ?object {
+		$ids = array_values( array_filter( array_map( 'intval', (array) ( $this->config['blogIds'] ?? [] ) ) ) );
+		if ( ! $ids || '' === $this->blog_card_file() || ! class_exists( 'WP_Query' ) ) {
+			return null;
 		}
-		$posts = [];
-		foreach ( (array) ( $this->config['blogIds'] ?? [] ) as $id ) {
-			$post = get_post( (int) $id );
-			if ( ! is_object( $post ) ) {
-				continue;
-			}
-			$type   = isset( $post->post_type ) ? (string) $post->post_type : 'post';
-			$status = isset( $post->post_status ) ? (string) $post->post_status : 'publish';
-			if ( ! in_array( $type, [ 'post', 'page' ], true ) || 'publish' !== $status ) {
-				continue;
-			}
-			$posts[] = $post;
-		}
-		return $posts;
+		$query = new \WP_Query(
+			[
+				'post__in'            => $ids,
+				'post_type'           => [ 'post', 'page' ],
+				'post_status'         => 'publish',
+				'orderby'             => 'post__in',
+				'posts_per_page'      => count( $ids ),
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+			]
+		);
+		return $query->have_posts() ? $query : null;
 	}
 
 	/**
