@@ -2,7 +2,7 @@
 
 راهنمای انتخاب پاوربانک و شارژر و مراقبت از باتری، برای قالب amazing روی ووکامرس.
 
-Version: **0.6.0** · Requires PHP **8.0** · Requires **WooCommerce** · Author: Parsa Dana, Keyvan Havestin
+Version: **0.6.1** · Requires PHP **8.0** · Requires **WooCommerce** · Author: Parsa Dana, Keyvan Havestin
 
 ---
 
