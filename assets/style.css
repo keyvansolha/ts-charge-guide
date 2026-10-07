@@ -293,7 +293,7 @@
 .cg-help-intro { font-size: 16px; margin-bottom: 20px; }
 .cg-help-steps { list-style: none; padding: 0; margin: 20px 0; counter-reset: cg-step; }
 .cg-help-steps li { counter-increment: cg-step; display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid var(--cg-border-subtle); font-size: 16px; }
-.cg-help-steps li::before { content: counter(cg-step, persian); min-width: 30px; height: 30px; display: grid; place-items: center; background: var(--cg-surface-card); border-radius: 50%; font-size: 14px; }
+.cg-help-steps li::before { content: counter(cg-step, persian); min-width: 30px; height: 30px; display: grid; place-items: center; background: var(--cg-theme-accent); color: var(--cg-brand-navy); font-weight: bold; border-radius: 50%; font-size: 14px; }
 .cg-help-followup { color: var(--cg-state-success); font-size: 16px; padding-top: 12px; }
 
 /* ---------------- products ---------------- */
